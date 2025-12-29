@@ -10,19 +10,18 @@ import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import GeoJSON from "ol/format/GeoJSON";
 import { Style, Stroke, Fill, Text } from "ol/style";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat } from "ol/proj";
 import { defaults as defaultControls } from "ol/control";
-import { Zoom, Attribution, ScaleLine } from "ol/control";
+import { Zoom } from "ol/control";
 import { click } from "ol/events/condition";
 import Select from "ol/interaction/Select";
 import "ol/ol.css";
 import { Feature } from "ol";
 import { Geometry } from "ol/geom";
 
-import type { SiteBoundary, DashboardFilters } from "./types";
-import { mapColors, serenaBrand } from "./utils/colorPalettes";
-import MapToggleButtons from "./MapToggleButtons";
-import YearSlider from "./YearSlider";
+import type { SiteBoundary } from "./types";
+import { OverlayButtons, BasemapToggle } from "./MapControls";
+import TimelineControl from "./TimelineControl";
 
 interface DashboardMapProps {
   boundaries: SiteBoundary[];
@@ -78,7 +77,7 @@ export default function DashboardMap({
     onSiteClickRef.current = onSiteClick;
   }, [onSiteClick]);
 
-  // Style for vector features - different colors for OSM vs Satellite
+  // Style for vector features
   const getVectorStyle = useCallback(
     (feature: Feature<Geometry>, selected: boolean = false) => {
       const siteId = feature.get("siteId");
@@ -86,18 +85,21 @@ export default function DashboardMap({
       const isSelected = siteId === selectedSiteId || selected;
       const isSatellite = baseLayer === "satellite";
 
-      // Use brighter, more visible colors on satellite imagery
       const colors = isSatellite
         ? {
-            fill: isSelected ? "rgba(255, 200, 0, 0.4)" : "rgba(0, 255, 255, 0.3)",
-            stroke: isSelected ? "#fbbf24" : "#00ffff",
+            fill: isSelected
+              ? "rgba(251, 191, 36, 0.35)"
+              : "rgba(6, 182, 212, 0.25)",
+            stroke: isSelected ? "#fbbf24" : "#06b6d4",
             textFill: "#ffffff",
             textStroke: "#000000",
           }
         : {
-            fill: isSelected ? "rgba(249, 115, 22, 0.35)" : "rgba(22, 101, 52, 0.25)",
-            stroke: isSelected ? "#f97316" : "#166534",
-            textFill: "#1c1917",
+            fill: isSelected
+              ? "rgba(16, 185, 129, 0.4)"
+              : "rgba(16, 185, 129, 0.2)",
+            stroke: isSelected ? "#10b981" : "#059669",
+            textFill: "#1f2937",
             textStroke: "#ffffff",
           };
 
@@ -107,13 +109,15 @@ export default function DashboardMap({
         }),
         stroke: new Stroke({
           color: colors.stroke,
-          width: isSelected ? 4 : 3,
+          width: isSelected ? 4 : 2.5,
+          lineCap: "round",
+          lineJoin: "round",
         }),
         text: new Text({
           text: siteName,
-          font: "bold 12px Inter, sans-serif",
+          font: "600 12px Inter, system-ui, sans-serif",
           fill: new Fill({ color: colors.textFill }),
-          stroke: new Stroke({ color: colors.textStroke, width: 4 }),
+          stroke: new Stroke({ color: colors.textStroke, width: 3 }),
           overflow: true,
           offsetY: -12,
         }),
@@ -122,11 +126,10 @@ export default function DashboardMap({
     [selectedSiteId, baseLayer]
   );
 
-  // Initialize map
+  // Initialize map (no scale, no attribution visible)
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
-    // Vector source and layer
     const vectorSource = new VectorSource();
     const vectorLayer = new VectorLayer({
       source: vectorSource,
@@ -135,7 +138,6 @@ export default function DashboardMap({
     });
     vectorLayerRef.current = vectorLayer;
 
-    // Base raster layer (hidden by default)
     const baseRasterLayer = new TileLayer({
       source: new XYZ({ url: "" }),
       visible: false,
@@ -144,7 +146,6 @@ export default function DashboardMap({
     });
     baseRasterLayerRef.current = baseRasterLayer;
 
-    // Classified raster layer (hidden by default)
     const classifiedRasterLayer = new TileLayer({
       source: new XYZ({ url: "" }),
       visible: false,
@@ -153,7 +154,6 @@ export default function DashboardMap({
     });
     classifiedRasterLayerRef.current = classifiedRasterLayer;
 
-    // OSM base layer
     const osmLayer = new TileLayer({
       source: new OSM(),
       zIndex: 0,
@@ -161,7 +161,6 @@ export default function DashboardMap({
     });
     osmLayerRef.current = osmLayer;
 
-    // Satellite base layer (Esri World Imagery)
     const satelliteLayer = new TileLayer({
       source: new XYZ({
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -173,25 +172,27 @@ export default function DashboardMap({
     });
     satelliteLayerRef.current = satelliteLayer;
 
-    // Create map
     const map = new Map({
       target: mapContainer.current,
-      layers: [osmLayer, satelliteLayer, baseRasterLayer, classifiedRasterLayer, vectorLayer],
+      layers: [
+        osmLayer,
+        satelliteLayer,
+        baseRasterLayer,
+        classifiedRasterLayer,
+        vectorLayer,
+      ],
       view: new View({
-        center: fromLonLat([73.0, 33.5]), // Pakistan center
+        center: fromLonLat([73.0, 33.5]),
         zoom: 6,
         minZoom: 4,
         maxZoom: 19,
       }),
       controls: defaultControls({ attribution: false, zoom: false }).extend([
         new Zoom({ className: "ol-zoom custom-zoom" }),
-        new ScaleLine({ units: "metric" }),
-        new Attribution({ collapsible: true, collapsed: true }),
       ]),
     });
     mapRef.current = map;
 
-    // Select interaction for clicking features
     const selectInteraction = new Select({
       condition: click,
       layers: [vectorLayer],
@@ -200,7 +201,6 @@ export default function DashboardMap({
     selectInteractionRef.current = selectInteraction;
     map.addInteraction(selectInteraction);
 
-    // Handle feature click - use ref to always get latest callback
     selectInteraction.on("select", (e) => {
       if (e.selected.length > 0) {
         const feature = e.selected[0];
@@ -217,20 +217,17 @@ export default function DashboardMap({
     };
   }, []);
 
-  // Update vector layer style when selectedSiteId or baseLayer changes
   useEffect(() => {
     if (vectorLayerRef.current) {
       vectorLayerRef.current.setStyle((feature) =>
         getVectorStyle(feature as Feature<Geometry>, false)
       );
     }
-    // Clear selection to force style refresh
     if (selectInteractionRef.current) {
       selectInteractionRef.current.getFeatures().clear();
     }
   }, [selectedSiteId, baseLayer, getVectorStyle]);
 
-  // Update boundaries when they change
   useEffect(() => {
     if (!vectorLayerRef.current) return;
 
@@ -247,10 +244,8 @@ export default function DashboardMap({
       boundaries.forEach((boundary) => {
         if (!boundary.geometry) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let geometry: any = boundary.geometry;
 
-        // Handle FeatureCollection
         if (
           geometry.type === "FeatureCollection" &&
           geometry.features?.length > 0
@@ -258,7 +253,6 @@ export default function DashboardMap({
           geometry = geometry.features[0].geometry;
         }
 
-        // Handle Feature
         if (geometry.type === "Feature" && geometry.geometry) {
           geometry = geometry.geometry;
         }
@@ -287,7 +281,6 @@ export default function DashboardMap({
 
       source.addFeatures(features);
 
-      // Fit view to features if any
       if (features.length > 0 && mapRef.current) {
         const extent = source.getExtent();
         mapRef.current.getView().fit(extent, {
@@ -301,14 +294,12 @@ export default function DashboardMap({
     }
   }, [boundaries]);
 
-  // Toggle vector layer visibility
   useEffect(() => {
     if (vectorLayerRef.current) {
       vectorLayerRef.current.setVisible(showVectors);
     }
   }, [showVectors]);
 
-  // Toggle base layer (OSM vs Satellite)
   useEffect(() => {
     if (osmLayerRef.current && satelliteLayerRef.current) {
       osmLayerRef.current.setVisible(baseLayer === "osm");
@@ -316,7 +307,6 @@ export default function DashboardMap({
     }
   }, [baseLayer]);
 
-  // Update base raster layer
   useEffect(() => {
     if (!baseRasterLayerRef.current) return;
 
@@ -333,7 +323,6 @@ export default function DashboardMap({
     }
   }, [baseRasterTileUrl, showImagery]);
 
-  // Update classified raster layer
   useEffect(() => {
     if (!classifiedRasterLayerRef.current) return;
 
@@ -353,42 +342,45 @@ export default function DashboardMap({
   const singleSiteSelected = selectedSiteId !== null;
 
   return (
-    <div className="relative w-full h-[60vh] min-h-[400px] bg-stone-100 rounded-xl overflow-hidden shadow-lg border border-stone-200">
+    <div className="relative w-full h-[65vh] min-h-[450px] bg-stone-100 rounded-xl overflow-hidden shadow-lg border border-stone-200">
       {/* Map container */}
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-20">
-          <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-lg shadow-lg">
-            <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm font-medium text-stone-700">
-              Loading map data...
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-30">
+          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl shadow-lg border border-stone-200">
+            <div className="w-5 h-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <span className="text-sm font-medium text-stone-600">
+              Loading...
             </span>
           </div>
         </div>
       )}
 
-      {/* Map toggle buttons - top right */}
+      {/* Overlay buttons - top right */}
       <div className="absolute top-4 right-4 z-10">
-        <MapToggleButtons
+        <OverlayButtons
           showVectors={showVectors}
           showImagery={showImagery}
           showClassified={showClassified}
-          baseLayer={baseLayer}
           onToggleVectors={onToggleVectors}
           onToggleImagery={onToggleImagery}
           onToggleClassified={onToggleClassified}
-          onToggleBaseLayer={onToggleBaseLayer}
           singleSiteSelected={singleSiteSelected}
           loading={loading}
         />
       </div>
 
-      {/* Year slider - bottom left (only when single site selected) */}
+      {/* Basemap toggle - fixed position under zoom controls */}
+      <div className="absolute top-28 left-4 z-10">
+        <BasemapToggle baseLayer={baseLayer} onToggleBaseLayer={onToggleBaseLayer} />
+      </div>
+
+      {/* Year selector - bottom center */}
       {singleSiteSelected && availableYears.length > 0 && (
-        <div className="absolute bottom-4 left-4 z-20 max-w-md">
-          <YearSlider
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+          <TimelineControl
             years={availableYears}
             selectedYear={selectedYear}
             onChange={onYearChange}
@@ -398,72 +390,107 @@ export default function DashboardMap({
         </div>
       )}
 
-      {/* Map legend hint - bottom right */}
+      {/* Legend - bottom right */}
       <div className="absolute bottom-4 right-4 z-10">
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-stone-200 px-3 py-2 text-xs text-stone-600">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded border-2"
-              style={{
-                backgroundColor: baseLayer === "satellite" ? "rgba(0, 255, 255, 0.3)" : "rgba(22, 101, 52, 0.25)",
-                borderColor: baseLayer === "satellite" ? "#00ffff" : "#166534",
-              }}
-            />
-            <span>Site</span>
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-stone-200 px-3 py-2.5">
+          <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5">
+            Legend
           </div>
-          {selectedSiteId && (
-            <div className="flex items-center gap-2 mt-1.5">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
               <div
-                className="w-3 h-3 rounded border-2"
+                className="w-4 h-3 rounded-sm border-2"
                 style={{
-                  backgroundColor: baseLayer === "satellite" ? "rgba(255, 200, 0, 0.4)" : "rgba(249, 115, 22, 0.35)",
-                  borderColor: baseLayer === "satellite" ? "#fbbf24" : "#f97316",
+                  backgroundColor:
+                    baseLayer === "satellite"
+                      ? "rgba(6, 182, 212, 0.25)"
+                      : "rgba(16, 185, 129, 0.2)",
+                  borderColor:
+                    baseLayer === "satellite" ? "#06b6d4" : "#059669",
                 }}
               />
-              <span>Selected</span>
+              <span className="text-xs text-stone-600">Site</span>
             </div>
-          )}
+            {selectedSiteId && (
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-3 rounded-sm border-2"
+                  style={{
+                    backgroundColor:
+                      baseLayer === "satellite"
+                        ? "rgba(251, 191, 36, 0.35)"
+                        : "rgba(16, 185, 129, 0.4)",
+                    borderColor:
+                      baseLayer === "satellite" ? "#fbbf24" : "#10b981",
+                  }}
+                />
+                <span className="text-xs text-stone-600">Selected</span>
+              </div>
+            )}
+            {showClassified && (
+              <>
+                <div className="h-px bg-stone-200 my-1.5" />
+                <div className="text-[10px] font-medium text-stone-500 mb-1">
+                  Classification
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  {[
+                    { color: "#166534", label: "Canopy" },
+                    { color: "#4ade80", label: "Green" },
+                    { color: "#0ea5e9", label: "Water" },
+                    { color: "#94a3b8", label: "Built" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-1.5">
+                      <div
+                        className="w-2.5 h-2.5 rounded-sm"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-[10px] text-stone-500">
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Custom zoom control styles */}
+      {/* Custom zoom styles - light theme */}
       <style jsx global>{`
+        .ol-scale-line {
+          display: none !important;
+        }
         .custom-zoom {
           position: absolute;
-          top: auto;
-          bottom: 80px;
-          right: 16px;
-          left: auto;
+          top: 16px;
+          left: 16px;
+          right: auto;
+          bottom: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
         .custom-zoom button {
           background: white;
           border: 1px solid #e7e5e4;
-          border-radius: 8px;
-          width: 36px;
-          height: 36px;
-          margin: 2px;
-          font-size: 18px;
-          color: #44403c;
+          border-radius: 10px;
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+          color: #57534e;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.15s;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .custom-zoom button:hover {
           background: #f0fdf4;
-          border-color: #22c55e;
-          color: #166534;
+          border-color: #10b981;
+          color: #059669;
         }
-        .ol-scale-line {
-          background: rgba(255, 255, 255, 0.9);
-          border-radius: 4px;
-          padding: 2px 6px;
-          bottom: 8px;
-          left: 8px;
-        }
-        .ol-scale-line-inner {
-          border-color: #44403c;
-          color: #44403c;
-          font-size: 10px;
+        .custom-zoom button:active {
+          transform: scale(0.95);
         }
       `}</style>
     </div>
