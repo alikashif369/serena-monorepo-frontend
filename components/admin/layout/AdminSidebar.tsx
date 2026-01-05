@@ -27,6 +27,7 @@ import {
   BookOpen,
   Menu,
   X,
+  PenLine,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -97,6 +98,13 @@ const NAVIGATION_GROUPS: NavGroup[] = [
   },
 ];
 
+const PROMINENT_LINK = {
+  id: 'vector-draw',
+  label: 'Vector Drawing',
+  icon: <PenLine className="w-5 h-5" />,
+  href: '/admin/vector-draw',
+};
+
 interface AdminSidebarProps {
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
@@ -150,6 +158,25 @@ export default function AdminSidebar({ collapsed = false, onCollapsedChange }: A
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2">
+        {/* Prominent Vector Draw Link */}
+        <Link
+          href={PROMINENT_LINK.href}
+          className={`
+            flex items-center gap-3 px-3 py-3 mx-1 mb-4 rounded-lg transition font-medium
+            ${pathname?.startsWith('/admin/vector-draw')
+              ? 'bg-green-900 text-white'
+              : 'bg-green-50 text-green-800 hover:bg-green-100 border border-green-200'
+            }
+            ${collapsed ? 'justify-center' : ''}
+          `}
+          title={collapsed ? PROMINENT_LINK.label : undefined}
+        >
+          <span className={pathname?.startsWith('/admin/vector-draw') ? 'text-green-200' : 'text-green-600'}>
+            {PROMINENT_LINK.icon}
+          </span>
+          {!collapsed && <span>{PROMINENT_LINK.label}</span>}
+        </Link>
+
         {NAVIGATION_GROUPS.map((group) => {
           const isExpanded = expandedGroups.includes(group.id);
           const groupActive = isGroupActive(group);

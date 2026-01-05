@@ -5,15 +5,46 @@ import Map from "ol/Map";
 import View from "ol/View";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
+import XYZ from "ol/source/XYZ";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import { Draw, Modify, Snap } from "ol/interaction";
 import GeoJSON from "ol/format/GeoJSON";
-import { Style, Stroke, Fill } from "ol/style";
+import { Style, Stroke, Fill, Text } from "ol/style";
 import { fromLonLat } from "ol/proj";
+import { defaults as defaultControls } from "ol/control";
 import "ol/ol.css";
 import * as turf from "@turf/turf";
 import { fetchAllVectorLayers, convertToGeoJSONFeatures } from "@/lib/utils/vectorLayerService";
+
+// Basemap definitions
+export type BasemapType = "osm" | "satellite";
+
+const BASEMAP_SOURCES: Record<BasemapType, () => OSM | XYZ> = {
+  osm: () => new OSM(),
+  satellite: () => new XYZ({
+    url: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+    maxZoom: 20,
+    attributions: "&copy; Google",
+    crossOrigin: "anonymous",
+  }),
+};
+
+// Polygon styles for different basemaps
+export const POLYGON_STYLES = {
+  osm: {
+    fill: "rgba(16, 185, 129, 0.2)",      // Emerald green, 20% opacity
+    stroke: "#059669",                     // Dark emerald
+    selectedFill: "rgba(16, 185, 129, 0.4)",
+    selectedStroke: "#10b981",
+  },
+  satellite: {
+    fill: "rgba(6, 182, 212, 0.25)",       // Cyan, 25% opacity
+    stroke: "#06b6d4",                      // Bright cyan
+    selectedFill: "rgba(251, 191, 36, 0.35)",
+    selectedStroke: "#fbbf24",              // Amber for selection
+  },
+};
 
 export default function DrawMap({
   onPolygonChange,
@@ -24,39 +55,64 @@ export default function DrawMap({
   rasterOpacity = 0.35,
   onMapReady,
   canDraw = false,
+  currentBasemap = "osm" as BasemapType,
 }: any) {
+  console.log("[MAP] >>>>>> DrawMap RENDER <<<<<<");
+
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
+
+  // Log ref states on every render
+  console.log("[MAP] Render - mapRef.current exists:", !!mapRef.current);
   const vectorSourceRef = useRef<VectorSource | null>(null);
   const rasterSourceRef = useRef<VectorSource | null>(null);
   const allPolygonsSourceRef = useRef<VectorSource | null>(null);
   const drawInteractionRef = useRef<Draw | null>(null);
   const modifyInteractionRef = useRef<Modify | null>(null);
   const snapInteractionRef = useRef<Snap | null>(null);
+  const baseLayerRef = useRef<TileLayer<OSM | XYZ> | null>(null);
+  const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const allPolygonsLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
 
   // Function to refresh background polygons (can be called externally)
   const refreshBackgroundPolygons = useRef<(() => Promise<void>) | null>(null);
 
   // Initial map + draw setup
   useEffect(() => {
-    console.log("[MAP] Initializing map component...");
-    if (!mapContainer.current || mapRef.current) {
-      console.log("[MAP] Map already exists or container not ready, skipping init");
+    console.log("[MAP] ========== MAP INIT EFFECT RUNNING ==========");
+    console.log("[MAP] mapContainer.current:", mapContainer.current);
+    console.log("[MAP] mapRef.current:", mapRef.current);
+
+    if (mapContainer.current) {
+      const rect = mapContainer.current.getBoundingClientRect();
+      console.log("[MAP] Container dimensions:", { width: rect.width, height: rect.height, top: rect.top, left: rect.left });
+    }
+
+    if (!mapContainer.current) {
+      console.log("[MAP] Container NOT ready, skipping init");
       return;
     }
+
+    if (mapRef.current) {
+      console.log("[MAP] Map already exists, skipping init");
+      return;
+    }
+
     console.log("[MAP] Container ready, starting initialization");
     // Vector source for drawn polygons
     const vectorSource = new VectorSource();
     vectorSourceRef.current = vectorSource;
     console.log("[MAP] Vector source created");
-    // Vector layer for drawn polygons
+    // Vector layer for drawn polygons (blue drawing layer)
+    const styles = POLYGON_STYLES[currentBasemap] || POLYGON_STYLES.osm;
     const vectorLayer = new VectorLayer({
       source: vectorSource,
       style: new Style({
-        fill: new Fill({ color: "rgba(59, 130, 246, 0.2)" }),
-        stroke: new Stroke({ color: "#3b82f6", width: 2 }),
+        fill: new Fill({ color: styles.fill }),
+        stroke: new Stroke({ color: styles.stroke, width: 2.5 }),
       }),
     });
+    vectorLayerRef.current = vectorLayer;
     // Raster footprints source/layer
     const rasterSource = new VectorSource();
     rasterSourceRef.current = rasterSource;
@@ -70,34 +126,75 @@ export default function DrawMap({
       opacity: rasterOpacity,
     });
     
-    // All polygons layer (yellow, background layer for visualization - no interaction)
+    // All polygons layer (background layer for visualization - no interaction)
     const allPolygonsSource = new VectorSource();
     allPolygonsSourceRef.current = allPolygonsSource;
+    const bgStyles = POLYGON_STYLES[currentBasemap] || POLYGON_STYLES.osm;
+    
+    // Style function for background polygons with text labels
+    const getBackgroundPolygonStyle = (feature: any) => {
+      const siteName = feature.get("siteName") || feature.get("name") || "";
+      const isSatellite = currentBasemap === "satellite";
+      
+      const colors = isSatellite
+        ? {
+            fill: bgStyles.fill,
+            stroke: bgStyles.stroke,
+            textFill: "#ffffff",
+            textStroke: "#000000",
+          }
+        : {
+            fill: bgStyles.fill,
+            stroke: bgStyles.stroke,
+            textFill: "#1f2937",
+            textStroke: "#ffffff",
+          };
+      
+      return new Style({
+        fill: new Fill({ color: colors.fill }),
+        stroke: new Stroke({ 
+          color: colors.stroke, 
+          width: 2.5,
+          lineCap: "round",
+          lineJoin: "round",
+        }),
+        text: new Text({
+          text: siteName,
+          font: "600 12px Inter, system-ui, sans-serif",
+          fill: new Fill({ color: colors.textFill }),
+          stroke: new Stroke({ color: colors.textStroke, width: 3 }),
+          overflow: true,
+          offsetY: -12,
+        }),
+      });
+    };
+    
     const allPolygonsLayer = new VectorLayer({
       source: allPolygonsSource,
-      style: new Style({
-        fill: new Fill({ color: "rgba(10, 82, 18, 0.2)" }), // Yellow with transparency
-        stroke: new Stroke({ color: "#081b05ff", width: 2 }), // Solid yellow border
-      }),
+      style: getBackgroundPolygonStyle,
       visible: true,
-      opacity: 0.7,
+      opacity: 0.8,
       properties: {
         name: 'background-polygons',
         interactive: false, // No interaction with these polygons
       },
     });
+    allPolygonsLayerRef.current = allPolygonsLayer;
     
-    // OSM base layer
+    // OSM base layer (default)
     const baseLayer = new TileLayer({
-      source: new OSM(),
+      source: BASEMAP_SOURCES.osm(),
       opacity: 1,
       zIndex: 0,
     });
-    // Map instance
+    baseLayerRef.current = baseLayer;
+
+    // Map instance - disable default zoom controls
     console.log("[MAP] Creating map with layers: base, allPolygons, raster, vector");
     const map = new Map({
       target: mapContainer.current,
       layers: [baseLayer, allPolygonsLayer, rasterLayer, vectorLayer],
+      controls: defaultControls({ zoom: false, attribution: false, rotate: false }),
       view: new View({
         center: fromLonLat([73.0479, 33.6844]),
         zoom: 12,
@@ -210,13 +307,75 @@ export default function DrawMap({
           }
           return Promise.resolve();
         },
+        setBasemap: (type: BasemapType) => {
+          console.log("[MAP] Switching basemap to:", type);
+          if (baseLayerRef.current && BASEMAP_SOURCES[type]) {
+            baseLayerRef.current.setSource(BASEMAP_SOURCES[type]());
+          }
+        },
       };
       onMapReady(map, drawApi);
     }
     console.log("[MAP] Map initialization complete");
+
+    // Fix for client-side navigation: update map size after container is properly sized
+    const updateMapSize = () => {
+      if (mapContainer.current) {
+        const rect = mapContainer.current.getBoundingClientRect();
+        console.log("[MAP] updateMapSize called - Container rect:", { width: rect.width, height: rect.height });
+      }
+      map.updateSize();
+      const size = map.getSize();
+      console.log("[MAP] Map size after updateSize:", size);
+      if (size && (size[0] === 0 || size[1] === 0)) {
+        console.warn("[MAP] WARNING: Map has zero dimensions!");
+      }
+    };
+
+    // Multiple delayed updates to handle client-side navigation timing issues
+    const timeoutIds = [
+      setTimeout(updateMapSize, 0),
+      setTimeout(updateMapSize, 50),
+      setTimeout(updateMapSize, 100),
+      setTimeout(updateMapSize, 200),
+      setTimeout(updateMapSize, 500),
+    ];
+
+    // ResizeObserver for container size changes
+    let resizeObserver: ResizeObserver | null = null;
+    if (mapContainer.current) {
+      resizeObserver = new ResizeObserver(() => {
+        map.updateSize();
+        console.log("[MAP] ResizeObserver triggered updateSize");
+      });
+      resizeObserver.observe(mapContainer.current);
+    }
+
+    // Window resize listener
+    window.addEventListener('resize', updateMapSize);
+
+    // requestAnimationFrame for immediate update
+    const rafId = requestAnimationFrame(updateMapSize);
+
     return () => {
-      console.log("[MAP] Cleaning up map (unmounting)");
+      console.log("[MAP] ========== CLEANUP: Unmounting map ==========");
+      timeoutIds.forEach(id => clearTimeout(id));
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updateMapSize);
+      resizeObserver?.disconnect();
       map.setTarget(undefined);
+      // CRITICAL: Clear the ref so map can be re-initialized on next mount
+      mapRef.current = null;
+      vectorSourceRef.current = null;
+      rasterSourceRef.current = null;
+      allPolygonsSourceRef.current = null;
+      drawInteractionRef.current = null;
+      modifyInteractionRef.current = null;
+      snapInteractionRef.current = null;
+      baseLayerRef.current = null;
+      vectorLayerRef.current = null;
+      allPolygonsLayerRef.current = null;
+      console.log("[MAP] All refs cleared");
     };
   }, [onPolygonChange, showVectors, showRasters, rasterOpacity]);
 
@@ -470,6 +629,50 @@ export default function DrawMap({
     }
   }, [showVectors, showRasters, rasterOpacity]);
 
+  // Update polygon styles when basemap changes
+  useEffect(() => {
+    const styles = POLYGON_STYLES[currentBasemap] || POLYGON_STYLES.osm;
+    console.log("[MAP] Updating polygon styles for basemap:", currentBasemap);
+
+    const isSatellite = currentBasemap === "satellite";
+    const textColors = isSatellite
+      ? { textFill: "#ffffff", textStroke: "#000000" }
+      : { textFill: "#1f2937", textStroke: "#ffffff" };
+
+    // Update vector layer (drawing layer) style
+    if (vectorLayerRef.current) {
+      vectorLayerRef.current.setStyle(new Style({
+        fill: new Fill({ color: styles.fill }),
+        stroke: new Stroke({ color: styles.stroke, width: 2.5 }),
+      }));
+    }
+
+    // Update background polygons layer style with text labels
+    if (allPolygonsLayerRef.current) {
+      allPolygonsLayerRef.current.setStyle((feature: any) => {
+        const siteName = feature.get("siteName") || feature.get("name") || "";
+        
+        return new Style({
+          fill: new Fill({ color: styles.fill }),
+          stroke: new Stroke({ 
+            color: styles.stroke, 
+            width: 2.5,
+            lineCap: "round",
+            lineJoin: "round",
+          }),
+          text: new Text({
+            text: siteName,
+            font: "600 12px Inter, system-ui, sans-serif",
+            fill: new Fill({ color: textColors.textFill }),
+            stroke: new Stroke({ color: textColors.textStroke, width: 3 }),
+            overflow: true,
+            offsetY: -12,
+          }),
+        });
+      });
+    }
+  }, [currentBasemap]);
+
   // Toggle drawing availability when site selection changes
   useEffect(() => {
     const draw = drawInteractionRef.current;
@@ -483,5 +686,5 @@ export default function DrawMap({
     console.log("[MAP] Drawing active state updated:", active);
   }, [canDraw]);
 
-  return <div ref={mapContainer} className="w-full h-full" />;
+  return <div ref={mapContainer} className="w-full h-full" style={{ minHeight: '400px', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />;
 }
