@@ -4,20 +4,28 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Serena Brand Colors */
-  --color-serena-green: #166534;
-  --color-serena-green-light: #22c55e;
-  --color-serena-accent: #f97316;
+  /* Serena Premium Palette - Light Mode Optimized */
+  --color-serena-green: #115e59; /* Deep Teal/Green - WCAG AAA on white */
+  --color-serena-green-dark: #0f3f3c; /* Darker variant */
+  --color-serena-gold: #b08d4b; /* Darkened Gold for better contrast on white */
+  --color-serena-sand: #f8f6f1; /* Warm Off-White Background */
+  --color-serena-text: #171717; /* Very dark grey for primary text */
+  --color-serena-muted: #525252; /* Dark grey for secondary text */
 }
+
+/* Enforcing Light Mode: Removing automatic dark mode switch */
+/* @media (prefers-color-scheme: dark) { ... } */
+
 html.dark {
-  color-scheme: dark;
+  /* color-scheme: dark; */ 
+  /* Disabling dark scheme preference */
 }
+
 @keyframes scroll-x {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
-/* Tailwind utility */
 .animate-scroll-x {
   animation: scroll-x 25s linear infinite;
 }
@@ -29,6 +37,7 @@ html.dark {
   --font-serif: var(--font-playfair), Georgia, serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
 }
+
 @keyframes partnerSlide {
   0% {
     transform: translateX(0);
@@ -41,23 +50,18 @@ html.dark {
 .animate-partnerSlide {
   animation: partnerSlide 18s linear infinite;
 }
- @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-        .animate-scroll {
-          animation: scroll linear infinite 20s; /* adjust 20s to make it faster/slower */
-        }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
   }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll linear infinite 20s;
 }
 
 body {
@@ -127,4 +131,23 @@ If you were using a div for the overlay, you'd use:
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(34, 197, 94, 0.4) rgba(0, 0, 0, 0.05);
+}
+
+/* Swiper Linear Timing for Marquee Effect */
+.linear-swiper-wrapper .swiper-wrapper {
+  transition-timing-function: linear !important;
+}
+
+/* Ken Burns Effect */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 20s ease-out infinite alternate;
 }

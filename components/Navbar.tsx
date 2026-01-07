@@ -4,12 +4,20 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link"; // Use Link for client-side navigation
+import { usePathname } from "next/navigation";
 // Import Lucide icons for reliable menu button
 import { LogIn, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  // Do not render this global navbar on the homepage, because the homepage uses PremiumNavbar
+  if (pathname === "/") {
+    return null;
+  }
 
   // Add scroll effect for glass + drop-shadow
   useEffect(() => {
@@ -34,20 +42,20 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
 
         {/* Logo */}
-        <a href="/" className="flex items-center gap-3">
+        <a href="/" className="flex items-center gap-3 group">
           <Image
             src="/serena-logo.png"
             alt="Serena Green"
             width={140}
             height={140}
-            className="object-contain drop-shadow-md"
+            className="object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
           />
           <span
             className={`
-              text-xl font-semibold tracking-tight transition-all
+              text-xl font-bold tracking-tight transition-all font-serif
               ${scrolled
-                ? "text-gray-700 hover:text-green-700"
-                : "text-white/90 hover:text-white drop-shadow-sm"
+                ? "text-gray-800 group-hover:text-green-800"
+                : "text-white group-hover:text-gray-100 drop-shadow-md"
               }
             
             `}
@@ -68,14 +76,15 @@ export default function Navbar() {
               key={item.label}
               href={item.href}
               className={`
-                text-sm font-medium transition-all duration-200 
+                text-sm font-medium transition-all duration-300 relative group
                 ${scrolled
-                  ? "text-gray-700 hover:text-green-700"
-                  : "text-white/90 hover:text-white" // Menu links are white/light in transparent state
+                  ? "text-gray-700 hover:text-green-800"
+                  : "text-white/90 hover:text-white"
                 }
               `}
             >
               {item.label}
+              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-green-700' : 'bg-white'}`}></span>
             </a>
           ))}
        
@@ -83,20 +92,11 @@ export default function Navbar() {
           <a
             href="/dashboard"
             className="
-    px-5 py-2 rounded-full text-sm font-semibold shadow-md transition-all
-    bg-green-900 text-white hover:bg-green-800
+    px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300
+    bg-gradient-to-r from-green-800 to-green-900 text-white hover:shadow-xl hover:-translate-y-0.5 border border-green-700/50
   "
           >
             Dashboard
-          </a>
-             <a
-            href="/login" // لاگ ان پیج کا لنک
-            className=" flex items-center gap-2 
-    px-5 py-2 rounded-full text-sm font-semibold shadow-md transition-all
-    bg-green-900 text-white hover:bg-green-800"
-          >
-            <LogIn className="w-4 h-4" />
-            Sign In
           </a>
           
         </div>
@@ -119,21 +119,14 @@ export default function Navbar() {
         <div className="md:hidden bg-white/95 backdrop-blur-lg shadow-xl border-t border-gray-200 animate-fade-down">
           <ul className="flex flex-col px-6 py-4 gap-4 text-gray-800 font-medium">
 
-            <a href="/" onClick={() => setOpen(false)}>Home</a>
-            <a href="#stats" onClick={() => setOpen(false)}>Stats</a>
-            <a href="#recent" onClick={() => setOpen(false)}>Activities</a>
-            <a href="#partners" onClick={() => setOpen(false)}>Partners</a>
+            <a href="/" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Home</a>
+            <a href="#stats" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Stats</a>
+            <a href="#recent" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Activities</a>
+            <a href="#partners" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Partners</a>
 
             <a
-              href="/login"
-              className="bg-gray-200 text-gray-800 text-center py-2 rounded-lg shadow hover:bg-gray-300 transition flex items-center justify-center gap-2"
-              onClick={() => setOpen(false)}
-            >
-              <LogIn className="w-4 h-4" /> Sign In
-            </a>
-            <a
               href="/dashboard"
-              className="bg-green-700 text-white text-center py-2 rounded-lg shadow hover:bg-green-800 transition"
+              className="bg-green-800 text-white text-center py-2.5 rounded-lg shadow-md hover:bg-green-900 transition mt-2"
               onClick={() => setOpen(false)}
             >
               Dashboard

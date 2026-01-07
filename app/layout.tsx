@@ -4,6 +4,7 @@ import "./globals.css";
 import AOSInit from "@/components/AOSInit";
 import Navbar from "@/components/Navbar";
 import Providers from "@/components/Providers";
+import ClientLayoutContent from "@/components/ClientLayoutContent";
 
 // Font configurations
 const inter = Inter({
@@ -40,10 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AOSInit />
           <Navbar />
 
-          {/* Push page content below fixed navbar */}
-          <div className="pt-20">
+          <ClientLayoutContent>
             {children}
-          </div>
+          </ClientLayoutContent>
         </Providers>
       </body>
     </html>
