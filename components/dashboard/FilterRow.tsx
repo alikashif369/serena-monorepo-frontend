@@ -1,15 +1,10 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { ChevronDown, X, Filter } from "lucide-react";
+import { ChevronDown, X, Filter, RefreshCcw } from "lucide-react";
 import type {
   DashboardFilters,
   HierarchyTree,
-  HierarchyTreeOrganization,
-  HierarchyTreeRegion,
-  HierarchyTreeCategory,
-  HierarchyTreeSubCategory,
-  HierarchyTreeSite,
 } from "./types";
 
 interface FilterRowProps {
@@ -24,7 +19,7 @@ interface SelectOption {
   label: string;
 }
 
-// Custom styled select component
+// Custom styled select component - Optimized for space
 function FilterSelect({
   label,
   value,
@@ -44,60 +39,50 @@ function FilterSelect({
   const isDisabled = disabled || options.length === 0;
 
   return (
-    <div className="flex flex-col gap-1.5 min-w-[160px] flex-1 max-w-[220px]">
-      <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">
+    <div className="flex flex-col gap-1 min-w-[140px] flex-1 max-w-[200px]">
+      <label className="text-[9px] font-bold text-[#115e59]/80 uppercase tracking-wider pl-1">
         {label}
       </label>
-      <div className="flex items-center gap-1">
-        <div className="relative flex-1">
-          <select
-            value={value ?? ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              onChange(val === "" ? null : parseInt(val, 10));
-            }}
-            disabled={isDisabled}
-            className={`
-              w-full appearance-none cursor-pointer
-              px-3 py-2.5 pr-8
-              bg-white border rounded-lg
-              text-sm font-medium
-              shadow-sm
-              transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500
-              ${isDisabled
-                ? "bg-stone-100 text-stone-400 cursor-not-allowed border-stone-200"
-                : value !== null
-                  ? "border-green-500 bg-green-50 text-green-800"
-                  : "border-stone-300 text-stone-700 hover:border-green-400"
-              }
-            `}
-          >
-            <option value="">{placeholder}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+      <div className="relative group">
+        <select
+          value={value ?? ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            onChange(val === "" ? null : parseInt(val, 10));
+          }}
+          disabled={isDisabled}
+          className={`
+            w-full appearance-none cursor-pointer
+            pl-3 pr-8 py-2
+            rounded-md text-xs font-semibold
+            transition-all duration-200
+            focus:outline-none focus:ring-1 focus:ring-[#b08d4b] focus:border-[#b08d4b]
+            border shadow-sm
+            ${isDisabled
+              ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-100"
+              : value !== null
+                ? "bg-[#115e59] border-[#115e59] text-white"
+                : "bg-white border-gray-200 text-gray-700 hover:border-[#b08d4b]/50"
+            }
+          `}
+        >
+          <option value="" className="bg-white text-gray-700">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value} className="bg-white text-gray-700">
+              {option.label}
+            </option>
+          ))}
+        </select>
+        
+        {/* Chevron / Loading Indicator */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-current">
           <ChevronDown
             className={`
-              absolute right-2 top-1/2 -translate-y-1/2
-              w-4 h-4 pointer-events-none
-              ${isDisabled ? "text-stone-300" : value !== null ? "text-green-600" : "text-stone-400"}
+              w-3.5 h-3.5 transition-transform duration-200
+              ${isDisabled ? "opacity-30" : value !== null ? "text-white/80" : "text-gray-400 group-hover:text-[#b08d4b]"}
             `}
           />
         </div>
-        {value !== null && !disabled && (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className="p-1.5 rounded-lg bg-stone-100 hover:bg-red-100 text-stone-500 hover:text-red-600 transition-colors flex-shrink-0"
-            title="Clear selection"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
       </div>
     </div>
   );
@@ -109,12 +94,6 @@ export default function FilterRow({
   loading,
   onFilterChange,
 }: FilterRowProps) {
-  // Debug: log hierarchy state
-  React.useEffect(() => {
-    console.log("[FilterRow] hierarchy:", hierarchy);
-    console.log("[FilterRow] loading:", loading);
-    console.log("[FilterRow] organizations count:", hierarchy?.organizations?.length ?? 0);
-  }, [hierarchy, loading]);
 
   // Derive options from hierarchy based on current filter state
   const organizationOptions = useMemo<SelectOption[]>(() => {
@@ -257,102 +236,94 @@ export default function FilterRow({
     filters.siteId !== null;
 
   return (
-    <div className="bg-white border-b border-stone-200 sticky top-0 z-50">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-green-700" />
-            <h2 className="text-sm font-semibold text-stone-700">
-              Filter Sites
-            </h2>
-            {loading && (
-              <span className="text-xs text-stone-400 animate-pulse">
-                Loading...
-              </span>
-            )}
+    <div className="bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm mt-6 transition-all duration-300 relative z-30">
+      <div className="max-w-[1920px] mx-auto px-4 md:px-8 py-3">
+        
+        {/* Compact Single Row Layout */}
+        <div className="flex flex-col xl:flex-row xl:items-end gap-3 xl:gap-6">
+          
+          {/* Label / Brand Indicator */}
+          <div className="hidden xl:flex flex-col justify-center pb-2.5 gap-1 min-w-fit">
+            <div className="flex items-center gap-2 text-[#115e59]">
+              <Filter className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-widest leading-none">Filters</span>
+            </div>
           </div>
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="text-xs text-stone-500 hover:text-stone-700 flex items-center gap-1 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-              Clear all
-            </button>
-          )}
+
+          {/* Filters Grid */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            <FilterSelect
+              label="Organization"
+              value={filters.organizationId}
+              options={organizationOptions}
+              onChange={(val) => handleFilterChange("organizationId", val)}
+              disabled={loading}
+              placeholder="Organization"
+            />
+
+            <FilterSelect
+              label="Region"
+              value={filters.regionId}
+              options={regionOptions}
+              onChange={(val) => handleFilterChange("regionId", val)}
+              disabled={loading || filters.organizationId === null}
+              placeholder="Region"
+            />
+
+            <FilterSelect
+              label="Category"
+              value={filters.categoryId}
+              options={categoryOptions}
+              onChange={(val) => handleFilterChange("categoryId", val)}
+              disabled={loading || filters.regionId === null}
+              placeholder="Category"
+            />
+
+            <FilterSelect
+              label="Sub-Category"
+              value={filters.subCategoryId}
+              options={subCategoryOptions}
+              onChange={(val) => handleFilterChange("subCategoryId", val)}
+              disabled={loading || filters.categoryId === null || subCategoryOptions.length === 0}
+              placeholder="Sub-Category"
+            />
+
+            <FilterSelect
+              label="Site"
+              value={filters.siteId}
+              options={siteOptions}
+              onChange={(val) => handleFilterChange("siteId", val)}
+              disabled={loading || filters.categoryId === null}
+              placeholder="Site"
+            />
+          </div>
+
+          {/* Clear Button - positioned at the end or below on mobile */}
+          <div className={`flex items-end pb-0.5 xl:min-w-fit ${!hasActiveFilters ? 'invisible' : ''}`}>
+             <button
+                onClick={clearAllFilters}
+                className="
+                  flex items-center gap-1.5 px-3 py-2 rounded-md
+                  text-[10px] font-bold uppercase tracking-widest
+                  bg-gray-100 text-gray-600 border border-gray-200
+                  hover:bg-red-50 hover:text-red-600 hover:border-red-200
+                  transition-all duration-200 h-[34px] w-full justify-center xl:w-auto
+                "
+              >
+                <X className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Clear All</span>
+                <span className="sm:hidden">Clear</span>
+              </button>
+          </div>
+
         </div>
 
-        {/* No data warning */}
-        {!loading && organizationOptions.length === 0 && (
-          <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
-            No organization data available. Please check your API connection.
-          </div>
-        )}
-
-        {/* Filter dropdowns */}
-        <div className="flex flex-wrap gap-4">
-          <FilterSelect
-            label="Organization"
-            value={filters.organizationId}
-            options={organizationOptions}
-            onChange={(val) => handleFilterChange("organizationId", val)}
-            disabled={loading}
-            placeholder="All Organizations"
-          />
-
-          <FilterSelect
-            label="Region"
-            value={filters.regionId}
-            options={regionOptions}
-            onChange={(val) => handleFilterChange("regionId", val)}
-            disabled={loading || filters.organizationId === null}
-            placeholder="All Regions"
-          />
-
-          <FilterSelect
-            label="Category"
-            value={filters.categoryId}
-            options={categoryOptions}
-            onChange={(val) => handleFilterChange("categoryId", val)}
-            disabled={loading || filters.regionId === null}
-            placeholder="All Categories"
-          />
-
-          <FilterSelect
-            label="Sub-Category"
-            value={filters.subCategoryId}
-            options={subCategoryOptions}
-            onChange={(val) => handleFilterChange("subCategoryId", val)}
-            disabled={loading || filters.categoryId === null || subCategoryOptions.length === 0}
-            placeholder="All Sub-Categories"
-          />
-
-          <FilterSelect
-            label="Site"
-            value={filters.siteId}
-            options={siteOptions}
-            onChange={(val) => handleFilterChange("siteId", val)}
-            disabled={loading || filters.categoryId === null}
-            placeholder="All Sites"
-          />
+        {/* Mobile Filter Label (visible only on small screens) */}
+        <div className="xl:hidden flex items-center gap-2 mt-2 mb-1 text-[#115e59] opacity-60">
+           <Filter className="w-3 h-3" />
+           <span className="text-[10px] font-bold uppercase tracking-widest">Filter Sites</span>
         </div>
-
-        {/* Active filters summary */}
-        {hasActiveFilters && (
-          <div className="mt-3 flex items-center gap-2 text-xs text-stone-500">
-            <span>Showing:</span>
-            {filters.siteId !== null ? (
-              <span className="font-medium text-green-700">
-                {siteOptions.find((s) => s.value === filters.siteId)?.label || "1 Site"}
-              </span>
-            ) : (
-              <span className="font-medium text-stone-700">
-                {siteOptions.length} site{siteOptions.length !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-        )}
+        
       </div>
     </div>
   );

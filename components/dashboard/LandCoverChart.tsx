@@ -26,12 +26,12 @@ function ChartSkeleton({ variant }: { variant: "doughnut" | "bar" }) {
   if (variant === "doughnut") {
     return (
       <div className="flex items-center justify-center gap-6 animate-pulse">
-        <div className="w-32 h-32 rounded-full bg-stone-200" />
-        <div className="space-y-2">
+        <div className="w-32 h-32 rounded-full bg-gray-100" />
+        <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-stone-200" />
-              <div className="w-20 h-3 bg-stone-200 rounded" />
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-gray-200" />
+              <div className="w-24 h-2.5 bg-gray-100 rounded" />
             </div>
           ))}
         </div>
@@ -44,7 +44,7 @@ function ChartSkeleton({ variant }: { variant: "doughnut" | "bar" }) {
       {[60, 80, 40, 70, 50, 30, 20, 15, 10].map((h, i) => (
         <div
           key={i}
-          className="flex-1 bg-stone-200 rounded-t"
+          className="flex-1 bg-gray-100 rounded-t-sm"
           style={{ height: `${h}%` }}
         />
       ))}
@@ -55,10 +55,12 @@ function ChartSkeleton({ variant }: { variant: "doughnut" | "bar" }) {
 // Empty state
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-stone-400">
-      <PieChart className="w-10 h-10 mb-2 opacity-50" />
-      <p className="text-sm">No land cover data available</p>
-      <p className="text-xs mt-1">Select a site to view metrics</p>
+    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+      <div className="p-4 bg-gray-50 rounded-full mb-3">
+        <PieChart className="w-8 h-8 opacity-40 text-gray-500" />
+      </div>
+      <p className="text-sm font-medium uppercase tracking-wide">No land cover data</p>
+      <p className="text-xs mt-1 opacity-70">Select a site to view metrics</p>
     </div>
   );
 }

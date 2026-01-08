@@ -4,137 +4,142 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link"; // Use Link for client-side navigation
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-// Import Lucide icons for reliable menu button
-import { LogIn, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, Home as HomeIcon, ChevronRight } from "lucide-react";
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  // Scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Do not render this global navbar on the homepage, because the homepage uses PremiumNavbar
   if (pathname === "/") {
     return null;
   }
 
-  // Add scroll effect for glass + drop-shadow
-  useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  // Dashboard-specific navigation links
+  const navLinks = [
+    { title: "Map View", href: "#map" },
+    { title: "Analytics", href: "#summary" },
+  ];
 
   return (
-    <header
-      className={`
-    fixed top-0 left-0 w-full z-50 transition-all duration-300
-    ${scrolled
-          ? "bg-white/90 backdrop-blur-xl shadow-lg border-b border-gray-200"
-          : "bg-green-900/30 backdrop-blur-sm border-b border-green-800/20" // DARK GREEN like footer
-        }
-      `}
+    <nav
+      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ease-in-out font-sans ${
+        scrolled
+          ? "bg-[#f8f6f1]/90 backdrop-blur-xl py-3 shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-[#115e59]/10"
+          : "bg-[#f8f6f1] py-5 border-b border-[#115e59]/5"
+      }`}
     >
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 flex items-center justify-between">
+        
+        {/* Brand Logo - Updated to match PremiumNavbar style */}
+        <Link href="/" className="flex items-center gap-4 group">
+          <div className="relative w-[180px] h-[50px] transition-all duration-500 group-hover:scale-105">
+             <Image
+              src="/serena-logo.png"
+              alt="Serena Green"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div className="hidden lg:flex flex-col border-l border-[#115e59]/20 pl-4">
+             <span
+              className="text-[#115e59] text-lg font-serif font-bold tracking-wide leading-none"
+            >
+              SERENA GREEN
+            </span>
+            <span
+              className="text-[#b08d4b] text-[10px] uppercase tracking-[0.3em] font-medium mt-1"
+            >
+              Analytics
+            </span>
+          </div>
+        </Link>
 
-      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
-
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-3 group">
-          <Image
-            src="/serena-logo.png"
-            alt="Serena Green"
-            width={140}
-            height={140}
-            className="object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
-          />
-          <span
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-10">
+          {navLinks.map((link) => (
+            <Link
+              key={link.title}
+              href={link.href}
+              className="relative text-[#115e59] text-xs uppercase tracking-[0.15em] font-bold hover:text-[#b08d4b] transition-colors duration-300 group py-2"
+            >
+              {link.title}
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#b08d4b] transition-all duration-300 group-hover:w-full opacity-0 group-hover:opacity-100" />
+            </Link>
+          ))}
+          
+          <Link
+            href="/"
             className={`
-              text-xl font-bold tracking-tight transition-all font-serif
-              ${scrolled
-                ? "text-gray-800 group-hover:text-green-800"
-                : "text-white group-hover:text-gray-100 drop-shadow-md"
-              }
-            
+              relative overflow-hidden group px-8 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border shadow-md hover:shadow-lg hover:-translate-y-0.5
+              bg-[#115e59] text-white border-[#115e59] hover:bg-[#b08d4b] hover:border-[#b08d4b]
             `}
           >
-            Serena Green
-          </span>
-        </a>
-
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-10">
-          {[
-            { href: "/", label: "Home" },
-            { href: "#stats", label: "Stats" },
-            { href: "#recent", label: "Activities" },
-            { href: "#partners", label: "Partners" },
-          ].map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className={`
-                text-sm font-medium transition-all duration-300 relative group
-                ${scrolled
-                  ? "text-gray-700 hover:text-green-800"
-                  : "text-white/90 hover:text-white"
-                }
-              `}
-            >
-              {item.label}
-              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full ${scrolled ? 'bg-green-700' : 'bg-white'}`}></span>
-            </a>
-          ))}
-       
-          {/* Dashboard Button */}
-          <a
-            href="/dashboard"
-            className="
-    px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300
-    bg-gradient-to-r from-green-800 to-green-900 text-white hover:shadow-xl hover:-translate-y-0.5 border border-green-700/50
-  "
-          >
-            Dashboard
-          </a>
-          
+            <span className="relative z-10 flex items-center gap-2">
+               <HomeIcon className="w-4 h-4" />
+               Return Home
+            </span>
+          </Link>
         </div>
 
-        {/* Mobile Menu Button (FIXED ICON) */}
+        {/* Mobile Menu Toggle */}
         <button
-          onClick={() => setOpen(!open)}
-          className={`
-            md:hidden text-2xl transition p-1 rounded
-            ${scrolled ? "text-gray-800 hover:bg-gray-100" : "text-white hover:bg-white/10"}
-          `}
+          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden p-2 text-[#115e59] hover:text-[#b08d4b] transition-colors"
         >
-          {/* Using Lucide icons instead of unstyled i tag */}
-          {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* Mobile Menu Drop-down */}
-      {open && (
-        <div className="md:hidden bg-white/95 backdrop-blur-lg shadow-xl border-t border-gray-200 animate-fade-down">
-          <ul className="flex flex-col px-6 py-4 gap-4 text-gray-800 font-medium">
-
-            <a href="/" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Home</a>
-            <a href="#stats" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Stats</a>
-            <a href="#recent" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Activities</a>
-            <a href="#partners" onClick={() => setOpen(false)} className="hover:text-green-700 transition-colors">Partners</a>
-
-            <a
-              href="/dashboard"
-              className="bg-green-800 text-white text-center py-2.5 rounded-lg shadow-md hover:bg-green-900 transition mt-2"
-              onClick={() => setOpen(false)}
-            >
-              Dashboard
-            </a>
-
-          </ul>
-        </div>
-      )}
-    </header>
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-[#f8f6f1] border-b border-[#115e59]/10 overflow-hidden"
+          >
+            <div className="flex flex-col p-6 space-y-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.title}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="text-[#115e59] text-sm font-bold uppercase tracking-widest hover:text-[#b08d4b] flex items-center justify-between group"
+                >
+                  {link.title}
+                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                </Link>
+              ))}
+              <div className="pt-4 border-t border-[#115e59]/10">
+                <Link
+                   href="/"
+                   onClick={() => setIsOpen(false)}
+                   className="flex items-center justify-center gap-2 w-full py-3 bg-[#115e59] text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#b08d4b] transition-colors"
+                >
+                  <HomeIcon className="w-4 h-4" />
+                  Return Home
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 }

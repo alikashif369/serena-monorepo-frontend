@@ -74,24 +74,24 @@ export default function DashboardPage() {
   }, [boundaries, filters]);
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Error banner */}
+    <div className="min-h-screen bg-[var(--color-serena-sand)] font-sans text-stone-800">
+      {/* Error banner - Styled to match premium aesthetic */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border-b border-red-200 px-4 py-3"
+          className="bg-white border-b border-red-100 px-6 py-4 shadow-sm relative z-50"
         >
           <div className="max-w-[1920px] mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">{error}</span>
+            <div className="flex items-center gap-3 text-red-800">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-sm font-medium tracking-wide">{error}</span>
             </div>
             <button
               onClick={refresh}
-              className="flex items-center gap-1.5 text-sm text-red-700 hover:text-red-800 font-medium"
+              className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-red-700 hover:text-red-900 transition-colors border-b border-red-200 hover:border-red-900 pb-0.5"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
               Retry
             </button>
           </div>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
       />
 
       {/* Map section */}
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div id="map" className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <DashboardMap
           boundaries={filteredBoundaries}
           selectedSiteId={filters.siteId}

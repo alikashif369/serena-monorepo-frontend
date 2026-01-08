@@ -99,32 +99,32 @@ function StatCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white rounded-xl shadow-sm border border-stone-200 p-5 hover:shadow-md transition-shadow"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-[#b08d4b]/30 transition-all duration-300 group"
     >
       {/* Icon and label */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-4 mb-4">
         <div
-          className="p-2.5 rounded-lg"
-          style={{ backgroundColor: `${color}15` }}
+          className="p-3 rounded-lg transition-transform duration-300 group-hover:scale-110"
+          style={{ backgroundColor: `${color}10` }}
         >
           <span style={{ color }}>{getMetricIcon(metric.metricType)}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-stone-600 truncate">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] truncate">
             {metric.label || formatMetricLabel(metric.metricType)}
           </p>
           {metric.year && (
-            <p className="text-xs text-stone-400">{metric.year}</p>
+            <p className="text-[10px] text-gray-400 font-mono mt-0.5">{metric.year}</p>
           )}
         </div>
       </div>
 
       {/* Value */}
-      <div className="mb-2">
-        <p className="text-2xl font-bold text-stone-800">
+      <div className="mb-4">
+        <p className="text-3xl font-serif text-[#115e59] leading-none">
           {formatNumber(metric.achievedValue || 0)}
           {metric.unit && (
-            <span className="text-sm font-normal text-stone-500 ml-1">
+            <span className="text-sm font-sans font-medium text-gray-400 ml-1.5 align-middle">
               {metric.unit}
             </span>
           )}
@@ -133,31 +133,24 @@ function StatCard({
 
       {/* Progress bar (if target exists) */}
       {hasTarget && progress !== null && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-stone-500 mb-1">
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
             <span>Progress</span>
-            <span>{progress.toFixed(0)}%</span>
+            <span style={{ color }}>{progress.toFixed(0)}%</span>
           </div>
-          <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              transition={{ duration: 1, ease: "easeOut" }}
               className="h-full rounded-full"
               style={{ backgroundColor: color }}
             />
           </div>
-          <p className="text-xs text-stone-400 mt-1">
-            Target: {formatNumber(metric.targetValue!)} {metric.unit}
+          <p className="text-[10px] text-gray-400 mt-2 font-medium">
+            Goal: <span className="font-mono">{formatNumber(metric.targetValue!)}</span>
           </p>
         </div>
-      )}
-
-      {/* Description */}
-      {metric.description && (
-        <p className="text-xs text-stone-500 mt-2 line-clamp-2">
-          {metric.description}
-        </p>
       )}
     </motion.div>
   );
@@ -219,18 +212,19 @@ export default function CategoryMetrics({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-stone-800">
+        <h3 className="text-xl font-serif text-[#115e59]">
           Performance Metrics
         </h3>
         {categoryType && (
           <span
-            className="text-xs font-medium px-3 py-1 rounded-full"
+            className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border"
             style={{
-              backgroundColor: `${getCategoryColor(categoryType)}15`,
+              backgroundColor: `${getCategoryColor(categoryType)}10`,
               color: getCategoryColor(categoryType),
+              borderColor: `${getCategoryColor(categoryType)}30`,
             }}
           >
             {categoryType.charAt(0) + categoryType.slice(1).toLowerCase()}
@@ -240,7 +234,7 @@ export default function CategoryMetrics({
 
       {/* Metrics grid */}
       <div
-        className={`grid gap-4 ${
+        className={`grid gap-5 ${
           compact
             ? "grid-cols-1 sm:grid-cols-2"
             : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
@@ -258,9 +252,11 @@ export default function CategoryMetrics({
 
       {/* Show more indicator */}
       {metrics.length > (compact ? 4 : 8) && (
-        <p className="text-sm text-stone-500 text-center">
-          +{metrics.length - (compact ? 4 : 8)} more metrics available
-        </p>
+        <div className="text-center pt-2">
+           <span className="inline-block px-4 py-1.5 rounded-full bg-[#f8f6f1] text-[10px] font-bold uppercase tracking-widest text-gray-500 border border-gray-100">
+            +{metrics.length - (compact ? 4 : 8)} more metrics available
+          </span>
+        </div>
       )}
     </div>
   );

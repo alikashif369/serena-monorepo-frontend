@@ -36,7 +36,7 @@ export default function PremiumNavbar() {
           : "bg-gradient-to-b from-white/80 to-transparent py-6"
       }`}
     >
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex items-center justify-between relative z-[50]">
         
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-4 group">
@@ -109,11 +109,11 @@ export default function PremiumNavbar() {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "100vh" }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden fixed inset-0 bg-white z-[40] pt-24 px-6 overflow-hidden"
+            className="md:hidden fixed top-0 left-0 right-0 bg-white z-[45] pt-24 pb-8 px-6 overflow-y-auto max-h-screen"
           >
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-6 min-h-[60vh]">
               {navLinks.map((link, idx) => (
                 <motion.div
                    key={link.title}
@@ -135,16 +135,16 @@ export default function PremiumNavbar() {
               <motion.div
                  initial={{ opacity: 0, y: 20 }}
                  animate={{ opacity: 1, y: 0 }}
-                 transition={{ delay: 0.3 }}
-                 className="pt-8"
+                 transition={{ delay: 0.4 }}
+                 className="pt-6 mt-auto"
               >
                   <Link
                     href="/dashboard"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-3 w-full py-4 bg-serena-gold text-white rounded-lg text-sm font-bold uppercase tracking-widest hover:bg-green-950 transition-colors"
+                    className="flex items-center justify-center gap-3 w-full py-4 bg-green-950 text-white rounded-full text-sm font-bold uppercase tracking-widest hover:bg-serena-gold transition-all duration-300 shadow-lg"
                   >
                     <LayoutDashboard className="w-5 h-5" />
-                    Access Dashboard
+                    Dashboard
                   </Link>
               </motion.div>
             </div>

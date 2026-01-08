@@ -25,10 +25,12 @@ export default function TimelineControl({
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-md border border-stone-200 px-2 py-1.5 inline-flex items-center gap-1">
-      <span className="text-[10px] font-medium text-stone-400 uppercase tracking-wide px-2">
-        Year
+    <div className="bg-[#0f3f3c]/95 backdrop-blur-md rounded-full shadow-xl border border-[#115e59] px-4 py-2 inline-flex items-center gap-2">
+      <span className="text-[10px] font-bold text-[#b08d4b] uppercase tracking-[0.15em] px-1">
+        Timeline
       </span>
+
+      <div className="h-4 w-px bg-white/10 mx-1" />
 
       <div className="flex items-center gap-1">
         {sortedYears.map((year) => {
@@ -40,22 +42,22 @@ export default function TimelineControl({
               onClick={() => onChange(year)}
               disabled={disabled}
               className={`
-                relative px-3 py-1.5 rounded-md text-sm font-semibold
-                transition-all duration-150
-                ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                relative px-3 py-1 rounded-full text-xs font-bold
+                transition-all duration-300
+                ${disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"}
                 ${
                   isSelected
-                    ? "bg-emerald-500 text-white shadow-sm"
-                    : "text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                    ? "text-white"
+                    : "text-gray-400 hover:text-white hover:bg-white/10"
                 }
               `}
             >
-              {year}
+              <span className="relative z-10">{year}</span>
               {isSelected && (
                 <motion.div
                   layoutId="yearIndicator"
-                  className="absolute inset-0 bg-emerald-500 rounded-md -z-10"
-                  transition={{ duration: 0.15 }}
+                  className="absolute inset-0 bg-[#b08d4b] rounded-full"
+                  transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 30 }}
                 />
               )}
             </button>
@@ -64,7 +66,7 @@ export default function TimelineControl({
       </div>
 
       {loading && (
-        <div className="w-4 h-4 ml-2 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-3.5 h-3.5 ml-2 rounded-full border-2 border-[#b08d4b] border-t-transparent animate-spin" />
       )}
     </div>
   );

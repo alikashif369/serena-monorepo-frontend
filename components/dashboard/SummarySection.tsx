@@ -55,21 +55,25 @@ export default function SummarySection({
 
   return (
     <motion.div
+      id="summary"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-stone-50 border-t border-stone-200"
+      className="bg-white border-t border-gray-100 shadow-[0_-1px_10px_rgba(0,0,0,0.02)] relative z-10"
     >
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12 py-12">
         {/* Section header */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-stone-800">
-            {hasSingleSite ? "Site Analysis" : "Summary Overview"}
+        <div className="mb-10 text-center md:text-left border-b border-gray-100 pb-6">
+          <span className="text-[#b08d4b] text-xs font-bold uppercase tracking-[0.2em] mb-2 block">
+            {hasSingleSite ? "Site Detials" : "Performance Overview"}
+          </span>
+          <h2 className="text-3xl md:text-4xl font-serif text-[#115e59]">
+            {hasSingleSite ? selectedSite?.name : "Summary Overview"}
           </h2>
-          <p className="text-sm text-stone-500 mt-1">
+          <p className="text-gray-500 mt-3 max-w-2xl font-light">
             {hasSingleSite
-              ? `Detailed metrics and information for ${selectedSite?.name}`
-              : "Aggregate metrics based on your current filter selection"}
+              ? `Detailed environmental metrics and conservation status for ${selectedSite?.name}`
+              : "Comprehensive aggregate metrics based on your current geographical selection"}
           </p>
         </div>
 

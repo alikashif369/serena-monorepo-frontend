@@ -100,7 +100,7 @@ export function useDashboard(): UseDashboardReturn {
   const [showImagery, setShowImagery] = useState(false);
   const [showClassified, setShowClassified] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [baseLayer, setBaseLayer] = useState<"osm" | "satellite">("osm");
+  const [baseLayer, setBaseLayer] = useState<"osm" | "satellite">("satellite");
   const [baseRasterTileUrl, setBaseRasterTileUrl] = useState<string | undefined>();
   const [classifiedRasterTileUrl, setClassifiedRasterTileUrl] = useState<string | undefined>();
 

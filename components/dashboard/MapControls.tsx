@@ -40,26 +40,9 @@ function ControlButton({
   icon,
   activeIcon,
   tooltip,
-  color = "emerald",
+  color = "emerald", // Maintained for prop stability but unused in styling
 }: ControlButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-
-  const colorClasses = {
-    emerald: {
-      active: "bg-emerald-500 text-white shadow-emerald-200",
-      hover: "hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200",
-    },
-    blue: {
-      active: "bg-blue-500 text-white shadow-blue-200",
-      hover: "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200",
-    },
-    purple: {
-      active: "bg-purple-500 text-white shadow-purple-200",
-      hover: "hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200",
-    },
-  };
-
-  const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.emerald;
 
   return (
     <div className="relative">
@@ -71,11 +54,11 @@ function ControlButton({
         whileHover={{ scale: disabled ? 1 : 1.05 }}
         whileTap={{ scale: disabled ? 1 : 0.95 }}
         className={`
-          relative w-10 h-10 rounded-xl flex items-center justify-center
-          border transition-all duration-200 shadow-sm
+          relative w-11 h-11 rounded-full flex items-center justify-center
+          border transition-all duration-300 shadow-sm
           ${disabled ? "opacity-40 cursor-not-allowed bg-stone-50 border-stone-200 text-stone-300" : ""}
-          ${!disabled && active ? `${colors.active} border-transparent shadow-md` : ""}
-          ${!disabled && !active ? `bg-white border-stone-200 text-stone-500 ${colors.hover}` : ""}
+          ${!disabled && active ? "bg-[#115e59] text-white border-[#115e59] shadow-md shadow-[#115e59]/20" : ""}
+          ${!disabled && !active ? "bg-white border-gray-100 text-gray-500 hover:text-[#b08d4b] hover:border-[#b08d4b] hover:shadow-md" : ""}
         `}
       >
         {active && activeIcon ? activeIcon : icon}
@@ -88,9 +71,9 @@ function ControlButton({
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
-            className="absolute right-full mr-2 top-1/2 -translate-y-1/2 z-50"
+            className="absolute right-full mr-3 top-1/2 -translate-y-1/2 z-50"
           >
-            <div className="bg-stone-800 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg whitespace-nowrap shadow-lg">
+            <div className="bg-[#0f3f3c] text-white text-[10px] uppercase tracking-wider font-bold px-3 py-2 rounded-lg whitespace-nowrap shadow-xl border border-[#b08d4b]/30">
               {tooltip}
               {disabled && " (select a site)"}
             </div>
@@ -152,10 +135,15 @@ export function BasemapToggle({
 }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
+  const handleClick = () => {
+    setShowTooltip(false);
+    onToggleBaseLayer();
+  };
+
   return (
     <div className="relative">
       <motion.button
-        onClick={onToggleBaseLayer}
+        onClick={handleClick}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         whileHover={{ scale: 1.05 }}

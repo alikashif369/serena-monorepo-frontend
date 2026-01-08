@@ -57,12 +57,12 @@ function LayerItem({
       whileTap={{ scale: disabled ? 1 : 0.98 }}
       className={`
         relative w-full flex items-center gap-3 p-3 rounded-xl
-        transition-all duration-200 text-left
-        ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+        transition-all duration-300 text-left border
+        ${disabled ? "opacity-40 cursor-not-allowed border-transparent" : "cursor-pointer"}
         ${
           active
-            ? "bg-gradient-to-r from-slate-700/80 to-slate-600/50 border border-white/20"
-            : "bg-slate-800/50 hover:bg-slate-700/50 border border-transparent"
+            ? "bg-[#115e59] border-[#b08d4b] shadow-lg shadow-[#115e59]/20"
+            : "bg-white/5 hover:bg-white/10 border-transparent hover:border-white/10"
         }
       `}
     >
@@ -70,18 +70,16 @@ function LayerItem({
       <div
         className={`
           relative w-10 h-10 rounded-lg flex items-center justify-center
-          transition-all duration-200
-          ${active ? "bg-white/15" : "bg-white/5"}
+          transition-all duration-300
+          ${active ? "bg-white/20 text-white" : "bg-white/5 text-gray-400"}
         `}
       >
-        <div className={`${active ? "text-white" : "text-slate-400"}`}>
-          {icon}
-        </div>
+        {icon}
         {/* Active color indicator */}
         {active && (
           <motion.div
             layoutId={`indicator-${label}`}
-            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-800"
+            className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-[#115e59]"
             style={{ backgroundColor: color }}
           />
         )}
@@ -90,22 +88,22 @@ function LayerItem({
       {/* Label and description */}
       <div className="flex-1 min-w-0">
         <div
-          className={`text-sm font-medium ${
-            active ? "text-white" : "text-slate-300"
+          className={`text-sm font-bold ${
+            active ? "text-white" : "text-gray-200"
           }`}
         >
           {label}
         </div>
-        <div className="text-[11px] text-slate-400 truncate">{description}</div>
+        <div className={`text-[10px] uppercase tracking-wide truncate ${active ? "text-white/70" : "text-gray-500"}`}>{description}</div>
       </div>
 
       {/* Visibility toggle */}
       <div
         className={`p-1.5 rounded-lg transition-all ${
-          active ? "bg-white/10 text-white" : "text-slate-500"
+          active ? "bg-white/20 text-white" : "text-gray-600"
         }`}
       >
-        {active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        {active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
       </div>
     </motion.button>
   );
@@ -133,11 +131,11 @@ function BaseLayerOption({
       whileTap={{ scale: 0.98 }}
       className={`
         relative flex-1 flex flex-col items-center gap-2 p-3 rounded-xl
-        transition-all duration-200 overflow-hidden
+        transition-all duration-300 overflow-hidden border
         ${
           isActive
-            ? "bg-gradient-to-b from-emerald-500/20 to-emerald-600/10 border-2 border-emerald-500/50"
-            : "bg-slate-800/50 hover:bg-slate-700/50 border-2 border-transparent"
+            ? "bg-[#115e59]/40 border-[#b08d4b]"
+            : "bg-white/5 hover:bg-white/10 border-transparent"
         }
       `}
     >
@@ -153,7 +151,7 @@ function BaseLayerOption({
       <div
         className={`
           relative w-10 h-10 rounded-lg flex items-center justify-center
-          ${isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-slate-400"}
+          ${isActive ? "bg-[#115e59] text-white" : "bg-white/5 text-gray-400"}
         `}
       >
         {icon}
@@ -162,8 +160,8 @@ function BaseLayerOption({
       {/* Label */}
       <span
         className={`
-          relative text-xs font-medium
-          ${isActive ? "text-emerald-400" : "text-slate-400"}
+          relative text-[10px] font-bold uppercase tracking-wider
+          ${isActive ? "text-white" : "text-gray-400"}
         `}
       >
         {label}
@@ -173,7 +171,7 @@ function BaseLayerOption({
       {isActive && (
         <motion.div
           layoutId="baseLayerIndicator"
-          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400"
+          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#b08d4b]"
         />
       )}
     </motion.button>
@@ -201,31 +199,31 @@ export default function LayerPanel({
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="w-72"
+      className="w-80"
     >
       {/* Glass panel container */}
-      <div className="bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="bg-[#0f3f3c]/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
         {/* Header */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors group"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-              <Layers className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[#115e59] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+              <Layers className="w-5 h-5 text-white" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-semibold text-white">
+              <div className="text-sm font-serif font-bold text-white tracking-wide">
                 Map Layers
               </div>
-              <div className="text-[10px] text-slate-400">
+              <div className="text-[10px] font-medium text-[#b08d4b] uppercase tracking-wider">
                 {[showVectors, showImagery, showClassified].filter(Boolean)
                   .length + 1}{" "}
                 active
               </div>
             </div>
           </div>
-          <div className="text-slate-400">
+          <div className="text-gray-400 group-hover:text-white transition-colors">
             {isExpanded ? (
               <ChevronUp className="w-5 h-5" />
             ) : (
@@ -241,19 +239,19 @@ export default function LayerPanel({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               {/* Section tabs */}
-              <div className="px-3 pb-2">
-                <div className="flex gap-1 p-1 bg-slate-800/50 rounded-lg">
+              <div className="px-4 pb-3">
+                <div className="flex gap-1 p-1 bg-black/20 rounded-xl">
                   <button
                     onClick={() => setActiveSection("base")}
                     className={`
-                      flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all
+                      flex-1 py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all
                       ${
                         activeSection === "base"
-                          ? "bg-white/10 text-white"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-[#115e59] text-white shadow-sm"
+                          : "text-gray-400 hover:text-white hover:bg-white/5"
                       }
                     `}
                   >
@@ -262,11 +260,11 @@ export default function LayerPanel({
                   <button
                     onClick={() => setActiveSection("overlays")}
                     className={`
-                      flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all
+                      flex-1 py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all
                       ${
                         activeSection === "overlays"
-                          ? "bg-white/10 text-white"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-[#115e59] text-white shadow-sm"
+                          : "text-gray-400 hover:text-white hover:bg-white/5"
                       }
                     `}
                   >
@@ -283,9 +281,9 @@ export default function LayerPanel({
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 10 }}
-                    className="px-3 pb-3"
+                    className="px-4 pb-4"
                   >
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <BaseLayerOption
                         type="osm"
                         isActive={baseLayer === "osm"}
@@ -315,7 +313,7 @@ export default function LayerPanel({
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="px-3 pb-3 space-y-2"
+                    className="px-4 pb-4 space-y-3"
                   >
                     <LayerItem
                       active={showVectors}
@@ -324,7 +322,7 @@ export default function LayerPanel({
                       icon={<Scan className="w-5 h-5" />}
                       label="Site Boundaries"
                       description="Vector polygon outlines"
-                      color="#10b981"
+                      color="#b08d4b"
                     />
 
                     <LayerItem
@@ -357,9 +355,9 @@ export default function LayerPanel({
 
                     {/* Loading indicator */}
                     {loading && (
-                      <div className="flex items-center justify-center gap-2 py-2 text-slate-400">
-                        <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-                        <span className="text-xs">Loading layers...</span>
+                      <div className="flex items-center justify-center gap-2 py-3 text-[#b08d4b]">
+                        <div className="w-4 h-4 rounded-full border-2 border-[#b08d4b] border-t-transparent animate-spin" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Loading layers...</span>
                       </div>
                     )}
                   </motion.div>
@@ -371,15 +369,15 @@ export default function LayerPanel({
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mx-3 mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
+                  className="mx-4 mb-4 p-4 rounded-xl bg-[#b08d4b]/10 border border-[#b08d4b]/20"
                 >
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-4 h-4 text-[#b08d4b] mt-0.5 flex-shrink-0" />
                     <div>
-                      <div className="text-xs font-medium text-amber-300">
+                      <div className="text-xs font-bold text-[#b08d4b] uppercase tracking-wide">
                         Select a site
                       </div>
-                      <div className="text-[11px] text-amber-400/70 mt-0.5">
+                      <div className="text-[11px] text-gray-400 mt-1 leading-relaxed">
                         Click on a site boundary to enable imagery and
                         classification layers
                       </div>
@@ -397,12 +395,12 @@ export default function LayerPanel({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl p-3"
+          className="mt-4 bg-[#0f3f3c]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl p-4"
         >
-          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <div className="text-[10px] font-bold text-[#b08d4b] uppercase tracking-[0.2em] mb-3">
             Classification Legend
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {[
               { color: "#166534", label: "Tree Canopy" },
               { color: "#4ade80", label: "Green Area" },
@@ -410,12 +408,12 @@ export default function LayerPanel({
               { color: "#94a3b8", label: "Built-up" },
               { color: "#d6b88c", label: "Barren" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2">
+              <div key={item.label} className="flex items-center gap-3">
                 <div
-                  className="w-3 h-3 rounded-sm"
+                  className="w-3 h-3 rounded-full border border-white/10"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-xs text-slate-300">{item.label}</span>
+                <span className="text-xs font-medium text-gray-200">{item.label}</span>
               </div>
             ))}
           </div>

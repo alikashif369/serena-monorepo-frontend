@@ -88,18 +88,18 @@ export default function DashboardMap({
       const colors = isSatellite
         ? {
             fill: isSelected
-              ? "rgba(251, 191, 36, 0.35)"
-              : "rgba(6, 182, 212, 0.25)",
-            stroke: isSelected ? "#fbbf24" : "#06b6d4",
+              ? "rgba(176, 141, 75, 0.4)" // Serena Gold
+              : "rgba(255, 255, 255, 0.15)", // Subtle white
+            stroke: isSelected ? "#b08d4b" : "#ffffff",
             textFill: "#ffffff",
             textStroke: "#000000",
           }
         : {
             fill: isSelected
-              ? "rgba(16, 185, 129, 0.4)"
-              : "rgba(16, 185, 129, 0.2)",
-            stroke: isSelected ? "#10b981" : "#059669",
-            textFill: "#1f2937",
+              ? "rgba(17, 94, 89, 0.5)" // Serena Green
+              : "rgba(17, 94, 89, 0.2)",
+            stroke: isSelected ? "#115e59" : "#0f3f3c",
+            textFill: "#115e59",
             textStroke: "#ffffff",
           };
 
@@ -109,13 +109,13 @@ export default function DashboardMap({
         }),
         stroke: new Stroke({
           color: colors.stroke,
-          width: isSelected ? 4 : 2.5,
+          width: isSelected ? 3 : 2,
           lineCap: "round",
           lineJoin: "round",
         }),
         text: new Text({
           text: siteName,
-          font: "600 12px Inter, system-ui, sans-serif",
+          font: "bold 11px Inter, system-ui, sans-serif",
           fill: new Fill({ color: colors.textFill }),
           stroke: new Stroke({ color: colors.textStroke, width: 3 }),
           overflow: true,
