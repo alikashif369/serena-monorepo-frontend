@@ -1,174 +1,240 @@
-"use client";
+﻿"use client";
 
 import Link from 'next/link';
-import { AdminPageHeader } from '@/components/admin/layout/AdminLayout';
+import { motion } from 'framer-motion';
 import {
   Building2,
-  Globe,
+  Leaf,
+  Upload,
+  ArrowRight,
+  PenLine,
   MapPin,
-  TrendingUp,
+  FolderTree,
+  Layers,
   Trees,
   Sun,
-  Leaf,
-  Image,
-  Upload,
+  Trash2,
   BarChart3,
+  Image,
+  Users,
+  Settings,
   FileText,
-  ArrowRight,
+  Droplets
 } from 'lucide-react';
+import { JSX } from 'react';
 
-interface QuickLinkProps {
+interface ModuleCardProps {
   href: string;
-  icon: React.ReactNode;
+  icon: JSX.Element;
   title: string;
   description: string;
-  count?: number;
 }
 
-function QuickLink({ href, icon, title, description, count }: QuickLinkProps) {
+function ModuleCard({ href, icon, title, description }: ModuleCardProps) {
   return (
     <Link
       href={href}
-      className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition group"
+      className="group flex items-start gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-[#115e59]/30 transition-all duration-300"
     >
-      <div className="p-3 bg-green-50 rounded-lg text-green-700 group-hover:bg-green-100 transition">
+      <div className="w-10 h-10 rounded-lg bg-[#115e59]/10 flex items-center justify-center text-[#115e59] group-hover:bg-[#115e59] group-hover:text-white transition-all duration-300 flex-shrink-0">
         {icon}
       </div>
-      <div className="flex-1">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          {count !== undefined && (
-            <span className="text-sm text-gray-500">{count} items</span>
-          )}
-        </div>
-        <p className="text-sm text-gray-600 mt-1">{description}</p>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-bold text-gray-800 group-hover:text-[#115e59] transition-colors flex items-center gap-2">
+          {title}
+          <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+        </h3>
+        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{description}</p>
       </div>
-      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition" />
     </Link>
   );
 }
 
-export default function AdminDashboard() {
+interface ModuleSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function ModuleSection({ title, children }: ModuleSectionProps) {
   return (
-    <div className="space-y-8">
-      <AdminPageHeader
-        title="Admin Dashboard"
-        description="Welcome to SerenaGreen 2.0 Admin Panel. Manage your data from the sidebar or use the quick links below."
-      />
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-green-900">--</div>
-          <div className="text-sm text-gray-600">Total Sites</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-blue-600">--</div>
-          <div className="text-sm text-gray-600">Rasters Uploaded</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-purple-600">--</div>
-          <div className="text-sm text-gray-600">Species Catalogued</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-orange-600">--</div>
-          <div className="text-sm text-gray-600">Photos</div>
-        </div>
-      </div>
-
-      {/* Quick Links - Hierarchy */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Hierarchy Management</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <QuickLink
-            href="/admin/organizations"
-            icon={<Building2 className="w-6 h-6" />}
-            title="Organizations"
-            description="Manage top-level organizations"
-          />
-          <QuickLink
-            href="/admin/regions"
-            icon={<Globe className="w-6 h-6" />}
-            title="Regions"
-            description="Manage geographic regions"
-          />
-          <QuickLink
-            href="/admin/sites"
-            icon={<MapPin className="w-6 h-6" />}
-            title="Sites"
-            description="Manage individual sites"
-          />
-        </div>
-      </div>
-
-      {/* Quick Links - Site Data */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Site Data</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <QuickLink
-            href="/admin/yearly-metrics"
-            icon={<TrendingUp className="w-6 h-6" />}
-            title="Yearly Metrics"
-            description="Land cover percentages per site per year"
-          />
-          <QuickLink
-            href="/admin/plantation-data"
-            icon={<Trees className="w-6 h-6" />}
-            title="Plantation Data"
-            description="Plant counts and species per site"
-          />
-          <QuickLink
-            href="/admin/solar-data"
-            icon={<Sun className="w-6 h-6" />}
-            title="Solar Data"
-            description="Solar capacity and quarterly production"
-          />
-        </div>
-      </div>
-
-      {/* Quick Links - Reference & Spatial */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Reference & Spatial Data</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <QuickLink
-            href="/admin/species"
-            icon={<Leaf className="w-6 h-6" />}
-            title="Species Catalog"
-            description="Manage tree/plant species"
-          />
-          <QuickLink
-            href="/admin/photos"
-            icon={<Image className="w-6 h-6" />}
-            title="Photo Management"
-            description="Upload and manage site photos"
-          />
-          <QuickLink
-            href="/admin/rasters"
-            icon={<Upload className="w-6 h-6" />}
-            title="Raster Upload"
-            description="Upload GeoTIFF satellite imagery"
-          />
-        </div>
-      </div>
-
-      {/* Quick Links - System */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">System</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <QuickLink
-            href="/admin/aggregate-metrics"
-            icon={<BarChart3 className="w-6 h-6" />}
-            title="Aggregate Metrics"
-            description="Organization/region-level metrics"
-          />
-          <QuickLink
-            href="/admin/category-summaries"
-            icon={<FileText className="w-6 h-6" />}
-            title="Category Summaries"
-            description="Dashboard text content"
-          />
-        </div>
+    <div>
+      <h2 className="text-sm font-bold text-[#0d4a47] uppercase tracking-widest mb-4 flex items-center gap-3">
+        <span className="w-10 h-[3px] bg-[#b08d4b] rounded-full" />
+        {title}
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {children}
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+  };
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={container}
+      className="max-w-[1800px] mx-auto space-y-8 pb-10"
+    >
+      {/* Vector Drawing Tool */}
+      <motion.div variants={item}>
+        <ModuleSection title="Vector Drawing">
+          <ModuleCard
+            href="/admin/vector-draw"
+            icon={<PenLine className="w-5 h-5" />}
+            title="Vector Drawing Tool"
+            description="Create and edit site boundaries, plantation zones, and infrastructure on the interactive map"
+          />
+        </ModuleSection>
+      </motion.div>
+
+      {/* Hierarchy Management */}
+      <motion.div variants={item}>
+        <ModuleSection title="Hierarchy Management">
+          <ModuleCard
+            href="/admin/organizations"
+            icon={<Building2 className="w-5 h-5" />}
+            title="Organizations"
+            description="Manage parent organizations and company structures"
+          />
+          <ModuleCard
+            href="/admin/regions"
+            icon={<MapPin className="w-5 h-5" />}
+            title="Regions"
+            description="Define geographical regions and zones"
+          />
+          <ModuleCard
+            href="/admin/categories"
+            icon={<FolderTree className="w-5 h-5" />}
+            title="Categories"
+            description="Organize sites by category types"
+          />
+          <ModuleCard
+            href="/admin/subcategories"
+            icon={<Layers className="w-5 h-5" />}
+            title="Sub-Categories"
+            description="Create detailed sub-categorizations"
+          />
+          <ModuleCard
+            href="/admin/sites"
+            icon={<MapPin className="w-5 h-5" />}
+            title="Sites"
+            description="Manage individual site locations"
+          />
+        </ModuleSection>
+      </motion.div>
+
+      {/* Site Data */}
+      <motion.div variants={item}>
+        <ModuleSection title="Site Data">
+          <ModuleCard
+            href="/admin/yearly-metrics"
+            icon={<BarChart3 className="w-5 h-5" />}
+            title="Yearly Metrics"
+            description="Annual performance and impact metrics"
+          />
+          <ModuleCard
+            href="/admin/plantation-data"
+            icon={<Trees className="w-5 h-5" />}
+            title="Plantation Data"
+            description="Tree planting records and growth data"
+          />
+          <ModuleCard
+            href="/admin/solar-data"
+            icon={<Sun className="w-5 h-5" />}
+            title="Solar Data"
+            description="Solar energy production metrics"
+          />
+          <ModuleCard
+            href="/admin/waste-data"
+            icon={<Trash2 className="w-5 h-5" />}
+            title="Waste Data"
+            description="Waste management and recycling data"
+          />
+          <ModuleCard
+            href="/admin/sewage-data"
+            icon={<Droplets className="w-5 h-5" />}
+            title="Sewage Data"
+            description="Water treatment and sewage metrics"
+          />
+        </ModuleSection>
+      </motion.div>
+
+      {/* Reference Data */}
+      <motion.div variants={item}>
+        <ModuleSection title="Reference Data">
+          <ModuleCard
+            href="/admin/species"
+            icon={<Leaf className="w-5 h-5" />}
+            title="Species Catalog"
+            description="Tree and plant species database"
+          />
+          <ModuleCard
+            href="/admin/photos"
+            icon={<Image className="w-5 h-5" />}
+            title="Photo Management"
+            description="Site photos and documentation"
+          />
+        </ModuleSection>
+      </motion.div>
+
+      {/* Spatial Data */}
+      <motion.div variants={item}>
+        <ModuleSection title="Spatial Data">
+          <ModuleCard
+            href="/admin/rasters"
+            icon={<Upload className="w-5 h-5" />}
+            title="Raster Upload"
+            description="Upload drone imagery and GeoTIFFs"
+          />
+        </ModuleSection>
+      </motion.div>
+
+      {/* System */}
+      <motion.div variants={item}>
+        <ModuleSection title="System">
+          <ModuleCard
+            href="/admin/users"
+            icon={<Users className="w-5 h-5" />}
+            title="User Management"
+            description="Manage user accounts and permissions"
+          />
+          <ModuleCard
+            href="/admin/aggregate-metrics"
+            icon={<BarChart3 className="w-5 h-5" />}
+            title="Aggregate Metrics"
+            description="View aggregated metrics across sites"
+          />
+          <ModuleCard
+            href="/admin/category-summaries"
+            icon={<FileText className="w-5 h-5" />}
+            title="Category Summaries"
+            description="Summary reports by category"
+          />
+          <ModuleCard
+            href="/admin/migration"
+            icon={<Settings className="w-5 h-5" />}
+            title="Data Migration"
+            description="Import and migrate data"
+          />
+        </ModuleSection>
+      </motion.div>
+    </motion.div>
   );
 }

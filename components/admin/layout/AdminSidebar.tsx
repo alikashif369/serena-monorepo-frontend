@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -20,15 +20,14 @@ import {
   BarChart3,
   FileText,
   ChevronDown,
-  ChevronRight,
-  Settings,
-  Database,
-  Map,
-  BookOpen,
   Menu,
   X,
   PenLine,
   Users,
+  Database,
+  BookOpen,
+  Map,
+  Settings
 } from 'lucide-react';
 
 export interface NavItem {
@@ -115,7 +114,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ collapsed = false, onCollapsedChange }: AdminSidebarProps) {
   const pathname = usePathname();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
-    NAVIGATION_GROUPS.map(g => g.id) // All expanded by default
+    NAVIGATION_GROUPS.map(g => g.id)
   );
 
   const toggleGroup = (groupId: string) => {
@@ -137,21 +136,26 @@ export default function AdminSidebar({ collapsed = false, onCollapsedChange }: A
   return (
     <aside
       className={`
-        bg-white border-r border-gray-200 flex flex-col h-full transition-all duration-300
-        ${collapsed ? 'w-16' : 'w-64'}
+        bg-white border-r border-gray-200 flex flex-col h-full transition-all duration-300 ease-in-out shadow-sm
+        ${collapsed ? 'w-20' : 'w-72'}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+      <div className="flex items-center justify-between px-5 py-6 border-b border-gray-100">
         {!collapsed && (
-          <div>
-            <h2 className="text-lg font-bold text-green-900">Admin Panel</h2>
-            <p className="text-xs text-gray-500">SerenaGreen 2.0</p>
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-green-950 flex items-center justify-center text-serena-gold font-serif font-bold text-lg">
+                S
+             </div>
+             <div>
+                <h2 className="text-lg font-serif font-bold text-green-950 tracking-wide">Admin Panel</h2>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Serena Green</p>
+             </div>
           </div>
         )}
         <button
           onClick={() => onCollapsedChange?.(!collapsed)}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition"
+          className={`p-2 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-green-950 transition ${collapsed ? 'mx-auto' : ''}`}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
@@ -159,21 +163,21 @@ export default function AdminSidebar({ collapsed = false, onCollapsedChange }: A
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
+      <nav className="flex-1 overflow-y-auto py-6 px-3 scrollbar-thin scrollbar-thumb-gray-200">
         {/* Prominent Vector Draw Link */}
         <Link
           href={PROMINENT_LINK.href}
           className={`
-            flex items-center gap-3 px-3 py-3 mx-1 mb-4 rounded-lg transition font-medium
+            flex items-center gap-3 px-3 py-3.5 mx-1 mb-6 rounded-lg transition-all group font-medium
             ${pathname?.startsWith('/admin/vector-draw')
-              ? 'bg-green-900 text-white'
-              : 'bg-green-50 text-green-800 hover:bg-green-100 border border-green-200'
+              ? 'bg-green-950 text-white shadow-md shadow-green-900/20'
+              : 'bg-white text-green-950 hover:bg-green-50 border border-green-100 hover:border-green-200'
             }
             ${collapsed ? 'justify-center' : ''}
           `}
           title={collapsed ? PROMINENT_LINK.label : undefined}
         >
-          <span className={pathname?.startsWith('/admin/vector-draw') ? 'text-green-200' : 'text-green-600'}>
+          <span className={`${pathname?.startsWith('/admin/vector-draw') ? 'text-serena-gold' : 'text-green-700 group-hover:text-green-900'}`}>
             {PROMINENT_LINK.icon}
           </span>
           {!collapsed && <span>{PROMINENT_LINK.label}</span>}
@@ -184,107 +188,88 @@ export default function AdminSidebar({ collapsed = false, onCollapsedChange }: A
           const groupActive = isGroupActive(group);
 
           return (
-            <div key={group.id} className="mb-2">
+            <div key={group.id} className="mb-4">
               {/* Group Header */}
               <button
                 onClick={() => !collapsed && toggleGroup(group.id)}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2 rounded-lg transition
-                  ${groupActive ? 'bg-green-50 text-green-900' : 'text-gray-700 hover:bg-gray-100'}
-                  ${collapsed ? 'justify-center' : 'justify-between'}
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
+                  ${collapsed ? 'justify-center pointer-events-none' : 'justify-between hover:bg-gray-50'}
                 `}
                 title={collapsed ? group.label : undefined}
               >
                 <div className="flex items-center gap-3">
-                  <span className={groupActive ? 'text-green-700' : 'text-gray-500'}>
+                  <span className={`
+                    ${groupActive ? 'text-green-700' : 'text-gray-400'}
+                  `}>
                     {group.icon}
                   </span>
                   {!collapsed && (
-                    <span className="text-sm font-medium">{group.label}</span>
+                    <span className={`text-sm font-semibold tracking-wide ${groupActive ? 'text-green-950' : 'text-gray-600'}`}>
+                      {group.label}
+                    </span>
                   )}
                 </div>
                 {!collapsed && (
-                  <span className="text-gray-400">
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-300 transition-transform duration-200 ${
+                      isExpanded ? 'transform rotate-180' : ''
+                    }`}
+                  />
                 )}
               </button>
 
-              {/* Group Items */}
-              {!collapsed && isExpanded && (
-                <div className="mt-1 ml-4 space-y-1">
+              {/* Group Items (Accordion) */}
+              <div
+                className={`
+                  overflow-hidden transition-all duration-300 ease-in-out
+                  ${isExpanded && !collapsed ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}
+                `}
+              >
+                <div className="flex flex-col gap-0.5 ml-4 border-l border-gray-100 pl-3 py-1">
                   {group.items.map((item) => {
-                    const itemActive = isItemActive(item.href);
-
+                    const active = isItemActive(item.href);
                     return (
                       <Link
                         key={item.id}
                         href={item.href}
                         className={`
-                          flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition
-                          ${itemActive
-                            ? 'bg-green-900 text-white'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all
+                          ${active
+                            ? 'bg-green-50 text-green-900 font-medium'
+                            : 'text-gray-500 hover:text-green-800 hover:bg-gray-50'
                           }
                         `}
                       >
-                        <span className={itemActive ? 'text-green-200' : 'text-gray-400'}>
-                          {item.icon}
-                        </span>
-                        <span>{item.label}</span>
+                         {/* Icons for items are optional/small */}
+                        {!collapsed && <span>{item.label}</span>}
                       </Link>
                     );
                   })}
                 </div>
-              )}
-
-              {/* Collapsed mode - show items as tooltips on hover */}
-              {collapsed && (
-                <div className="mt-1 space-y-1">
-                  {group.items.map((item) => {
-                    const itemActive = isItemActive(item.href);
-
-                    return (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        className={`
-                          flex items-center justify-center p-2 rounded-lg transition
-                          ${itemActive
-                            ? 'bg-green-900 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
-                          }
-                        `}
-                        title={item.label}
-                      >
-                        {item.icon}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+              </div>
             </div>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-t border-gray-200">
-          <Link
-            href="/"
-            className="text-xs text-gray-500 hover:text-gray-700 transition"
-          >
-            Back to Dashboard
-          </Link>
+      {/* Footer User Profile (Collapsed) */}
+      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+               <Users className="w-4 h-4" />
+           </div>
+           {!collapsed && (
+               <div className="flex-1 min-w-0">
+                   <p className="text-xs font-medium text-gray-900 truncate">Admin User</p>
+                   <p className="text-[10px] text-gray-400 truncate">admin@serena.com</p>
+               </div>
+           )}
+           {!collapsed && (
+               <Settings className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
+           )}
         </div>
-      )}
+      </div>
     </aside>
   );
 }
-
-export { NAVIGATION_GROUPS };

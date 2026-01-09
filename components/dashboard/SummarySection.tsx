@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import LandCoverChart from "./LandCoverChart";
 import CategoryMetrics from "./CategoryMetrics";
 import SiteDetailsPanel from "./SiteDetailsPanel";
+import SiteVisuals from "./SiteVisuals";
 import type {
   Site,
   YearlyMetrics,
@@ -47,10 +48,6 @@ export default function SummarySection({
   loading,
   onSiteClose,
 }: SummarySectionProps) {
-  // Debug logging
-  console.log('>>> SummarySection received sitePhotos:', sitePhotos);
-  console.log('>>> SummarySection sitePhotos length:', sitePhotos.length);
-  
   const hasSingleSite = selectedSite !== null;
 
   return (
@@ -63,59 +60,76 @@ export default function SummarySection({
     >
       <div className="max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12 py-12">
         {/* Section header */}
-        <div className="mb-10 text-center md:text-left border-b border-gray-100 pb-6">
-          <span className="text-[#b08d4b] text-xs font-bold uppercase tracking-[0.2em] mb-2 block">
-            {hasSingleSite ? "Site Detials" : "Performance Overview"}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-serif text-[#115e59]">
-            {hasSingleSite ? selectedSite?.name : "Summary Overview"}
-          </h2>
-          <p className="text-gray-500 mt-3 max-w-2xl font-light">
-            {hasSingleSite
-              ? `Detailed environmental metrics and conservation status for ${selectedSite?.name}`
-              : "Comprehensive aggregate metrics based on your current geographical selection"}
-          </p>
+        <div className="mb-10 text-center md:text-left border-b border-gray-100 pb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <span className="text-[#b08d4b] text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">
+                {hasSingleSite ? "Deep-Dive Site Analytics" : "Ecosystem Performance Overview"}
+              </span>
+              <h2 className="text-4xl md:text-5xl font-serif text-[#115e59] font-bold">
+                {hasSingleSite ? selectedSite?.name : "Summary Overview"}
+              </h2>
+            </div>
+            {hasSingleSite && (
+              <p className="text-gray-400 text-sm max-w-md font-medium leading-relaxed">
+                Detailed environmental metrics, biodiversity status, and field documentation for the {selectedSite?.name} conservation site.
+              </p>
+            )}
+          </div>
         </div>
 
         {hasSingleSite ? (
-          // Single site view - show detailed analysis
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left column - Charts */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Land cover chart */}
-              <LandCoverChart
-                metrics={yearlyMetrics}
-                loading={loading.metrics}
-                showTitle={true}
-              />
+          // Single site view - Optimized Proportional Layout
+          <div className="space-y-16">
+            {/* Top Row: Visual Intelligence Hub */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              {/* Left Side: Land Cover Chart (7 cols) */}
+              <div className="lg:col-span-7 h-full">
+                <LandCoverChart
+                  metrics={yearlyMetrics}
+                  loading={loading.metrics}
+                  showTitle={true}
+                />
+              </div>
 
-              {/* Category metrics if available */}
-              {aggregateMetrics.length > 0 && (
+              {/* Right Side: Site Details (5 cols) */}
+              <div className="lg:col-span-5 h-full">
+                <SiteDetailsPanel
+                  site={selectedSite}
+                  metrics={yearlyMetrics}
+                  species={siteSpecies}
+                  photos={sitePhotos}
+                  loading={loading.metrics || loading.species}
+                  onClose={onSiteClose}
+                />
+              </div>
+            </div>
+
+            {/* Middle Row: Visual Documentation & Biodiversity */}
+            <div className="pt-12 border-t border-gray-50">
+               <SiteVisuals 
+                 species={siteSpecies} 
+                 photos={sitePhotos} 
+                 siteName={selectedSite.name} 
+                 loading={loading.photos || loading.species}
+               />
+            </div>
+
+            {/* Bottom Row: Aggregate Metrics (Optional if data exists) */}
+            {aggregateMetrics.length > 0 && (
+              <div className="pt-16 border-t border-gray-50">
                 <CategoryMetrics
                   metrics={aggregateMetrics}
                   categoryType={categoryType}
                   loading={loading.aggregateMetrics}
                   compact={false}
                 />
-              )}
-            </div>
-
-            {/* Right column - Site details */}
-            <div className="lg:col-span-1">
-              <SiteDetailsPanel
-                site={selectedSite}
-                metrics={yearlyMetrics}
-                species={siteSpecies}
-                photos={sitePhotos}
-                loading={loading.metrics || loading.species}
-                onClose={onSiteClose}
-              />
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           // Multi-site view - show aggregate metrics
-          <div className="space-y-6">
-            {/* Aggregate metrics cards */}
+          <div className="space-y-8">
             <CategoryMetrics
               metrics={aggregateMetrics}
               categoryType={categoryType}
@@ -123,12 +137,11 @@ export default function SummarySection({
               compact={false}
             />
 
-            {/* Quick stats summary */}
             {!loading.aggregateMetrics && aggregateMetrics.length === 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+              <div className="bg-stone-50 rounded-[2rem] border border-stone-100 p-16 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-sm">
                   <svg
-                    className="w-8 h-8 text-green-600"
+                    className="w-10 h-10 text-emerald-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -136,18 +149,17 @@ export default function SummarySection({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-stone-800 mb-2">
-                  Explore Site Data
+                <h3 className="text-2xl font-serif font-bold text-stone-800 mb-3">
+                  Ecosystem Intelligence
                 </h3>
-                <p className="text-sm text-stone-500 max-w-md mx-auto">
-                  Use the filters above to narrow down to specific organizations,
-                  regions, or categories. Select a single site to see detailed
-                  land cover analysis and metrics.
+                <p className="text-stone-500 max-w-md mx-auto leading-relaxed">
+                  Utilize the geospatial filters above to synthesize data across organizations, 
+                  regions, or impact categories. Select a specific site to unlock high-resolution imagery and field reports.
                 </p>
               </div>
             )}

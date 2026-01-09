@@ -13,6 +13,7 @@ import { MapPanel } from "@/components/vector-draw/MapPanel";
 import { CreateHierarchyModal } from "@/components/vector-draw/CreateHierarchyModal";
 import { CreateSiteModal } from "@/components/vector-draw/CreateSiteModal";
 import { API_URL, getHeaders } from "@/lib/utils/apiConfig";
+import { AdminNavbar } from "@/components/admin/layout/AdminNavbar";
 
 const API_BASE = API_URL;
 
@@ -23,8 +24,11 @@ export default function VectorDrawPage() {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <ToastListWrapper />
-        <VectorDrawPageInner />
+        <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+          <AdminNavbar />
+          <ToastListWrapper />
+          <VectorDrawPageInner />
+        </div>
       </ToastProvider>
     </ErrorBoundary>
   );
@@ -495,7 +499,7 @@ function VectorDrawPageInner() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex flex-1 overflow-hidden">
       {hierarchyLoading ? (
         <aside className="w-96 border-r border-gray-200 bg-white p-4 space-y-4 overflow-y-auto min-h-0 max-h-full">
           <div className="flex items-center gap-2 mb-4">

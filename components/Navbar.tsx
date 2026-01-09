@@ -24,7 +24,8 @@ export default function Navbar() {
   }, []);
 
   // Do not render this global navbar on the homepage, because the homepage uses PremiumNavbar
-  if (pathname === "/") {
+  // Also hide on auth pages as they have their own standalone layout
+  if (pathname === "/" || pathname === '/login' || pathname === '/accept-invitation' || pathname?.startsWith('/admin')) {
     return null;
   }
 
