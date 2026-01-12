@@ -240,8 +240,14 @@ function VectorDrawPageInner() {
     }
   }, [year, isCacheValid, CACHE_TTL]);
 
-  // Fetch all sites with boundaries for the selected year (with caching)
+  // Fetch all sites with boundaries for the selected year (with caching and staggered loading)
   useEffect(() => {
+    // Wait for hierarchy to load first to avoid simultaneous API calls
+    if (hierarchyLoading) {
+      console.log('[FETCH_ALL_BOUNDARIES] Waiting for hierarchy to load first...');
+      return;
+    }
+
     // Check cache first
     if (isCacheValid(year)) {
       console.log('[FETCH_ALL_BOUNDARIES] Using cached data for year:', year);
@@ -255,7 +261,9 @@ function VectorDrawPageInner() {
       return;
     }
 
-    const fetchAllBoundaries = async () => {
+    // Add a small delay to stagger API calls and prevent rate limiting
+    const fetchTimer = setTimeout(() => {
+      const fetchAllBoundaries = async () => {
       try {
         isFetchingBoundariesRef.current = true;
         console.log("[FETCH_ALL_BOUNDARIES] Fetching boundaries for year:", year);
@@ -297,7 +305,11 @@ function VectorDrawPageInner() {
     };
     
     fetchAllBoundaries();
-  }, [year, isCacheValid, CACHE_TTL]);
+    }, 300); // 300ms delay to stagger after hierarchy loads
+
+    // Cleanup timer on unmount
+    return () => clearTimeout(fetchTimer);
+  }, [year, isCacheValid, CACHE_TTL, hierarchyLoading]);
 
   // Fetch features for selected site and year
   useEffect(() => {

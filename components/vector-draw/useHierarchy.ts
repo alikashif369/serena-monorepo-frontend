@@ -52,29 +52,10 @@ export function useHierarchy(): UseHierarchyResult {
           console.log(`[NORMALIZE] Processing category ${cat.id} (${cat.name}), sites: ${cat.sites?.length || 0}, subcats: ${cat.subCategories?.length || 0}`);
           subCatsByCategory[cat.id] = cat.subCategories || [];
 
-          // Sites directly under category
-          const catSites: HierarchySite[] = (cat.sites || []).map((site: any) => ({
-            id: site.id,
-            name: site.name,
-            slug: site.slug,
-            siteType: site.siteType,
-            area: site.area,
-            district: site.district,
-            city: site.city,
-            org: org.name,
-            region: region.name,
-            category: cat.name,
-            categoryId: cat.id,
-            subCategory: null,
-            subCategoryId: null,
-          }));
-          console.log(`[NORMALIZE] Category ${cat.id} has ${catSites.length} direct sites`);
-          sites.push(...catSites);
-          sitesByCategory[cat.id] = catSites;
-
-          // Sites under subcategories
-          cat.subCategories?.forEach((sub: any) => {
-            const subSites: HierarchySite[] = (sub.sites || []).map((site: any) => ({
+          // Sites directly under category (filter out soft-deleted sites)
+          const catSites: HierarchySite[] = (cat.sites || [])
+            .filter((site: any) => !site.deletedAt)
+            .map((site: any) => ({
               id: site.id,
               name: site.name,
               slug: site.slug,
@@ -86,9 +67,34 @@ export function useHierarchy(): UseHierarchyResult {
               region: region.name,
               category: cat.name,
               categoryId: cat.id,
-              subCategory: sub.name,
-              subCategoryId: sub.id,
+              subCategory: null,
+              subCategoryId: null,
+              deletedAt: site.deletedAt,
             }));
+          console.log(`[NORMALIZE] Category ${cat.id} has ${catSites.length} direct sites`);
+          sites.push(...catSites);
+          sitesByCategory[cat.id] = catSites;
+
+          // Sites under subcategories (filter out soft-deleted sites)
+          cat.subCategories?.forEach((sub: any) => {
+            const subSites: HierarchySite[] = (sub.sites || [])
+              .filter((site: any) => !site.deletedAt)
+              .map((site: any) => ({
+                id: site.id,
+                name: site.name,
+                slug: site.slug,
+                siteType: site.siteType,
+                area: site.area,
+                district: site.district,
+                city: site.city,
+                org: org.name,
+                region: region.name,
+                category: cat.name,
+                categoryId: cat.id,
+                subCategory: sub.name,
+                subCategoryId: sub.id,
+                deletedAt: site.deletedAt,
+              }));
             console.log(`[NORMALIZE] SubCategory ${sub.id} (${sub.name}) has ${subSites.length} sites`);
             sites.push(...subSites);
             sitesBySubCategory[sub.id] = subSites;

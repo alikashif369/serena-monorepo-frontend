@@ -380,27 +380,41 @@ export default function DrawMap({
   }, [onPolygonChange, showVectors, showRasters, rasterOpacity]);
 
   // Fetch all polygons for background visualization (yellow layer)
+  // Wait a bit to avoid simultaneous API calls on page load
   useEffect(() => {
-    const loadBackgroundPolygons = async () => {
-      console.log("[MAP] Loading background polygons for visualization...");
-      
-      const source = allPolygonsSourceRef.current;
-      if (!source) {
-        console.log("[MAP] All polygons source not ready, skipping");
-        return;
-      }
+    // Add delay to stagger API call and prevent rate limiting
+    const loadTimer = setTimeout(() => {
+      const loadBackgroundPolygons = async () => {
+        console.log("[MAP] Loading background polygons for visualization...");
+        
+        const source = allPolygonsSourceRef.current;
+        if (!source) {
+          console.log("[MAP] All polygons source not ready, skipping");
+          return;
+        }
 
-      // Clear existing features first
-      source.clear();
-      console.log("[MAP] Cleared existing background polygons");
+        // Clear existing features first
+        source.clear();
+        console.log("[MAP] Cleared existing background polygons");
 
-      // Fetch all vector layers using the service
-      const response = await fetchAllVectorLayers();
-      
-      if (!response.success) {
-        console.error("[MAP] Failed to load background polygons:", response.error);
-        return;
-      }
+        // Fetch all vector layers using the service
+        const response = await fetchAllVectorLayers();
+        
+        if (!response.success) {
+          // Log error but don't break the UI - gracefully degrade
+          console.warn("[MAP] Could not load background polygons:", response.error);
+          
+          // Provide context-specific messaging
+          if (response.error?.includes('unavailable') || response.error?.includes('Network error')) {
+            console.warn('[MAP] Backend service is not available - map will work without background polygons');
+            console.warn('[MAP] Drawing and uploading features will still work normally');
+          } else if (response.error?.includes('circuit breaker')) {
+            console.warn('[MAP] Service temporarily disabled - will retry automatically');
+          }
+          
+          // Don't throw - allow map to continue functioning
+          return;
+        }
 
       console.log("[MAP] Fetched", response.data.length, "vector layers for background");
 
@@ -447,8 +461,12 @@ export default function DrawMap({
     // Store the function so it can be called externally
     refreshBackgroundPolygons.current = loadBackgroundPolygons;
 
-    // Initial load
+    // Initial load with delay to prevent rate limiting
     loadBackgroundPolygons();
+    }, 600); // 600ms delay - load after other components initialize
+
+    // Cleanup timer
+    return () => clearTimeout(loadTimer);
   }, []);
 
   // Update existing vectors when prop changes

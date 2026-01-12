@@ -12,6 +12,7 @@ export type HierarchySite = {
   categoryId?: number;
   subCategory?: string | null;
   subCategoryId?: number | null;
+  deletedAt?: string | null;
 };
 
 export type BoundaryResponse = {

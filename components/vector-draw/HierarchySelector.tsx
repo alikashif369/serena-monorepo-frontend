@@ -46,11 +46,13 @@ export function HierarchySelector({
   const sitesFromSub = selectedSubCategoryId ? sitesBySubCategory[selectedSubCategoryId] || [] : [];
   const requiresSubCat = subCats.length > 0;
   
-  // Filter out sites that already have boundaries (polygons) for the selected year
+  // Filter out sites that already have boundaries (polygons) for the selected year AND deleted sites
   const allSitesBeforeFilter = requiresSubCat ? sitesFromSub : sitesFromCat;
-  const sites = allSitesBeforeFilter.filter(site => !disabledSiteIds?.has(site.id));
+  const sites = allSitesBeforeFilter.filter(site => 
+    !disabledSiteIds?.has(site.id) && !site.deletedAt
+  );
   
-  console.log("[HIERARCHY_SELECTOR] Filtered sites:", sites.length, "available out of", allSitesBeforeFilter.length, "total");
+  console.log("[HIERARCHY_SELECTOR] Filtered sites:", sites.length, "available out of", allSitesBeforeFilter.length, "total (excluding deleted)");
 
   return (
     <div className="space-y-3">
