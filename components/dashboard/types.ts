@@ -99,8 +99,21 @@ export interface WasteData {
   siteId: number;
   year: number;
   organicWaste: number;
+  inorganicWaste?: number;
+  rawMeatWaste?: number;
+  totalWaste?: number;
   compostReceived: number;
+  compostQuality?: string;
+  recoveryRatio?: number;
   methaneRecovered?: number;
+  methaneSaved?: number;
+  co2Equivalent?: number;
+  landfillDiverted?: number;
+  recyclingRate?: number;
+  disposalMethod?: string;
+  monthlyData?: Record<string, any>;
+  notes?: string;
+  dataSource?: string;
 }
 
 export interface SewageData {

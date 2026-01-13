@@ -109,11 +109,7 @@ export function useDashboard(): UseDashboardReturn {
   // Refresh trigger for boundaries
   const [boundariesRefreshKey, setBoundariesRefreshKey] = useState(0);
 
-  // Derived state
-  const availableYears = useMemo(() => {
-    return allYearlyMetrics.map((m) => m.year).sort((a, b) => a - b);
-  }, [allYearlyMetrics]);
-
+  // Derived state - Category Type
   const categoryType = useMemo<CategoryType | undefined>(() => {
     if (!hierarchy || filters.categoryId === null) return undefined;
 
@@ -125,6 +121,40 @@ export function useDashboard(): UseDashboardReturn {
 
     return category?.type;
   }, [hierarchy, filters]);
+
+  // Derived state - Available Years (category-specific)
+  const availableYears = useMemo(() => {
+    // If no site selected, use yearly metrics (plantation data)
+    if (!selectedSite) {
+      return allYearlyMetrics.map((m) => m.year).sort((a, b) => a - b);
+    }
+
+    const siteCategory = selectedSite.category?.type as CategoryType | undefined;
+
+    // Solar: Extract years from quarterly production keys
+    if (siteCategory === 'SOLAR' && selectedSite.solarData?.quarterlyProduction) {
+      const years = new Set<number>();
+      Object.keys(selectedSite.solarData.quarterlyProduction).forEach(key => {
+        const parts = key.split('_');
+        const year = parts[0].startsWith('Q') ? parseInt(parts[1]) : parseInt(parts[0]);
+        if (!isNaN(year)) years.add(year);
+      });
+      return Array.from(years).sort((a, b) => a - b);
+    }
+
+    // Waste: Extract years from wasteData
+    if (siteCategory === 'WASTE' && selectedSite.wasteData) {
+      return [...new Set(selectedSite.wasteData.map(d => d.year))].sort((a, b) => a - b);
+    }
+
+    // Sewage: Extract years from sewageData
+    if (siteCategory === 'SEWAGE' && selectedSite.sewageData) {
+      return [...new Set(selectedSite.sewageData.map(d => d.year))].sort((a, b) => a - b);
+    }
+
+    // Plantation/Restoration/Community: Use yearly metrics
+    return allYearlyMetrics.map((m) => m.year).sort((a, b) => a - b);
+  }, [selectedSite, allYearlyMetrics]);
 
   // Load hierarchy on mount
   useEffect(() => {
@@ -318,6 +348,19 @@ export function useDashboard(): UseDashboardReturn {
 
     loadRasters();
   }, [filters.siteId, selectedYear, allYearlyMetrics]);
+
+  // Auto-select the latest year when availableYears changes
+  useEffect(() => {
+    if (availableYears.length > 0) {
+      const latestYear = availableYears[availableYears.length - 1];
+      // Only update if selectedYear is null or not in the available years
+      if (selectedYear === null || !availableYears.includes(selectedYear)) {
+        setSelectedYear(latestYear);
+      }
+    } else {
+      setSelectedYear(null);
+    }
+  }, [availableYears]);
 
   // Load category summaries when filters change
   useEffect(() => {

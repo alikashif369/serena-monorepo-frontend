@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Recycle } from 'lucide-react';
+import { X, Recycle, ChevronDown, ChevronUp } from 'lucide-react';
 import { inputClassName } from '@/components/admin/shared/FormModal';
 import {
   WasteData,
@@ -29,13 +29,34 @@ export default function WasteDataFormModal({
 }: WasteDataFormModalProps) {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Form state
+  // Basic Form state
   const [siteId, setSiteId] = useState<number | ''>('');
   const [year, setYear] = useState<number | ''>(new Date().getFullYear());
   const [organicWaste, setOrganicWaste] = useState<number | ''>('');
+  const [inorganicWaste, setInorganicWaste] = useState<number | ''>('');
+  const [rawMeatWaste, setRawMeatWaste] = useState<number | ''>('');
+  const [totalWaste, setTotalWaste] = useState<number | ''>('');
+  
+  // Compost & Recovery
   const [compostReceived, setCompostReceived] = useState<number | ''>('');
+  const [compostQuality, setCompostQuality] = useState<string>('');
+  const [recoveryRatio, setRecoveryRatio] = useState<number | ''>('');
+  
+  // Environmental Impact
   const [methaneRecovered, setMethaneRecovered] = useState<number | ''>('');
+  const [methaneSaved, setMethaneSaved] = useState<number | ''>('');
+  const [co2Equivalent, setCo2Equivalent] = useState<number | ''>('');
+  
+  // Processing Details
+  const [landfillDiverted, setLandfillDiverted] = useState<number | ''>('');
+  const [recyclingRate, setRecyclingRate] = useState<number | ''>('');
+  const [disposalMethod, setDisposalMethod] = useState<string>('');
+  
+  // Notes
+  const [notes, setNotes] = useState<string>('');
+  const [dataSource, setDataSource] = useState<string>('');
 
   // Populate form when editing
   useEffect(() => {
@@ -43,17 +64,60 @@ export default function WasteDataFormModal({
       setSiteId(editingData.siteId);
       setYear(editingData.year);
       setOrganicWaste(editingData.organicWaste);
+      setInorganicWaste((editingData as any).inorganicWaste || '');
+      setRawMeatWaste((editingData as any).rawMeatWaste || '');
+      setTotalWaste((editingData as any).totalWaste || '');
       setCompostReceived(editingData.compostReceived);
+      setCompostQuality((editingData as any).compostQuality || '');
+      setRecoveryRatio((editingData as any).recoveryRatio || '');
       setMethaneRecovered(editingData.methaneRecovered || '');
+      setMethaneSaved((editingData as any).methaneSaved || '');
+      setCo2Equivalent((editingData as any).co2Equivalent || '');
+      setLandfillDiverted((editingData as any).landfillDiverted || '');
+      setRecyclingRate((editingData as any).recyclingRate || '');
+      setDisposalMethod((editingData as any).disposalMethod || '');
+      setNotes((editingData as any).notes || '');
+      setDataSource((editingData as any).dataSource || '');
     } else {
       // Reset form
       setSiteId('');
       setYear(new Date().getFullYear());
       setOrganicWaste('');
+      setInorganicWaste('');
+      setRawMeatWaste('');
+      setTotalWaste('');
       setCompostReceived('');
+      setCompostQuality('');
+      setRecoveryRatio('');
       setMethaneRecovered('');
+      setMethaneSaved('');
+      setCo2Equivalent('');
+      setLandfillDiverted('');
+      setRecyclingRate('');
+      setDisposalMethod('');
+      setNotes('');
+      setDataSource('');
     }
   }, [editingData, open]);
+
+
+  // Auto-calculate totals
+  useEffect(() => {
+    if (organicWaste || inorganicWaste || rawMeatWaste) {
+      const total = (Number(organicWaste) || 0) + (Number(inorganicWaste) || 0) + (Number(rawMeatWaste) || 0);
+      if (total > 0 && !totalWaste) {
+        setTotalWaste(total);
+      }
+    }
+  }, [organicWaste, inorganicWaste, rawMeatWaste]);
+
+  // Auto-calculate recovery ratio
+  useEffect(() => {
+    if (compostReceived && organicWaste && Number(organicWaste) > 0) {
+      const ratio = ((Number(compostReceived) / Number(organicWaste)) * 100);
+      setRecoveryRatio(Number(ratio.toFixed(2)));
+    }
+  }, [compostReceived, organicWaste]);
 
   // Calculate conversion rate
   const conversionRate = organicWaste && organicWaste > 0
@@ -70,13 +134,27 @@ export default function WasteDataFormModal({
 
     setLoading(true);
     try {
-      const payload: CreateWasteData = {
+      const payload: any = {
         siteId: Number(siteId),
         year: Number(year),
         organicWaste: Number(organicWaste),
         compostReceived: Number(compostReceived),
-        methaneRecovered: methaneRecovered ? Number(methaneRecovered) : undefined,
       };
+
+      // Add optional fields if they have values
+      if (inorganicWaste) payload.inorganicWaste = Number(inorganicWaste);
+      if (rawMeatWaste) payload.rawMeatWaste = Number(rawMeatWaste);
+      if (totalWaste) payload.totalWaste = Number(totalWaste);
+      if (compostQuality) payload.compostQuality = compostQuality;
+      if (recoveryRatio) payload.recoveryRatio = Number(recoveryRatio);
+      if (methaneRecovered) payload.methaneRecovered = Number(methaneRecovered);
+      if (methaneSaved) payload.methaneSaved = Number(methaneSaved);
+      if (co2Equivalent) payload.co2Equivalent = Number(co2Equivalent);
+      if (landfillDiverted) payload.landfillDiverted = Number(landfillDiverted);
+      if (recyclingRate) payload.recyclingRate = Number(recyclingRate);
+      if (disposalMethod) payload.disposalMethod = disposalMethod;
+      if (notes) payload.notes = notes;
+      if (dataSource) payload.dataSource = dataSource;
 
       if (editingData) {
         await updateWasteData(editingData.id, payload);
@@ -135,7 +213,7 @@ export default function WasteDataFormModal({
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               {/* Site and Year */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -177,64 +255,298 @@ export default function WasteDataFormModal({
                 </div>
               </div>
 
-              {/* Organic Waste */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Organic Waste (kg) *
-                </label>
-                <input
-                  type="number"
-                  value={organicWaste}
-                  onChange={(e) => setOrganicWaste(e.target.value ? Number(e.target.value) : '')}
-                  className={inputClassName}
-                  placeholder="e.g., 10000"
-                  min={0}
-                  step={0.01}
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Total organic waste collected during the year
-                </p>
+              {/* Waste Breakdown Section */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">
+                  Waste Breakdown (tonnes)
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Organic Waste */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organic Waste *
+                    </label>
+                    <input
+                      type="number"
+                      value={organicWaste}
+                      onChange={(e) => setOrganicWaste(e.target.value ? Number(e.target.value) : '')}
+                      className={inputClassName}
+                      placeholder="50.0"
+                      min={0}
+                      step={0.01}
+                      required
+                    />
+                  </div>
+
+                  {/* Inorganic Waste */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Inorganic Waste
+                    </label>
+                    <input
+                      type="number"
+                      value={inorganicWaste}
+                      onChange={(e) => setInorganicWaste(e.target.value ? Number(e.target.value) : '')}
+                      className={inputClassName}
+                      placeholder="10.0"
+                      min={0}
+                      step={0.01}
+                    />
+                  </div>
+
+                  {/* Raw Meat Waste */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Raw Meat Waste
+                    </label>
+                    <input
+                      type="number"
+                      value={rawMeatWaste}
+                      onChange={(e) => setRawMeatWaste(e.target.value ? Number(e.target.value) : '')}
+                      className={inputClassName}
+                      placeholder="2.5"
+                      min={0}
+                      step={0.01}
+                    />
+                  </div>
+
+                  {/* Total Waste */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Total Waste
+                    </label>
+                    <input
+                      type="number"
+                      value={totalWaste}
+                      onChange={(e) => setTotalWaste(e.target.value ? Number(e.target.value) : '')}
+                      className={`${inputClassName} bg-gray-50`}
+                      placeholder="Auto-calculated"
+                      min={0}
+                      step={0.01}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Compost Received */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Compost Received (kg) *
-                </label>
-                <input
-                  type="number"
-                  value={compostReceived}
-                  onChange={(e) => setCompostReceived(e.target.value ? Number(e.target.value) : '')}
-                  className={inputClassName}
-                  placeholder="e.g., 5000"
-                  min={0}
-                  step={0.01}
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Compost produced from organic waste
-                </p>
+              {/* Compost & Recovery Section */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">
+                  Compost & Recovery
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Compost Received */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Compost Received (tonnes) *
+                    </label>
+                    <input
+                      type="number"
+                      value={compostReceived}
+                      onChange={(e) => setCompostReceived(e.target.value ? Number(e.target.value) : '')}
+                      className={inputClassName}
+                      placeholder="25.0"
+                      min={0}
+                      step={0.01}
+                      required
+                    />
+                  </div>
+
+                  {/* Compost Quality */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Compost Quality
+                    </label>
+                    <select
+                      value={compostQuality}
+                      onChange={(e) => setCompostQuality(e.target.value)}
+                      className={inputClassName}
+                    >
+                      <option value="">Select quality...</option>
+                      <option value="Grade A">Grade A</option>
+                      <option value="Grade B">Grade B</option>
+                      <option value="Premium">Premium</option>
+                      <option value="Standard">Standard</option>
+                    </select>
+                  </div>
+
+                  {/* Recovery Ratio */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Recovery Ratio (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={recoveryRatio}
+                      onChange={(e) => setRecoveryRatio(e.target.value ? Number(e.target.value) : '')}
+                      className={`${inputClassName} bg-gray-50`}
+                      placeholder="Auto-calculated"
+                      min={0}
+                      max={100}
+                      step={0.01}
+                    />
+                  </div>
+
+                  {/* Landfill Diverted */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Landfill Diverted (tonnes)
+                    </label>
+                    <input
+                      type="number"
+                      value={landfillDiverted}
+                      onChange={(e) => setLandfillDiverted(e.target.value ? Number(e.target.value) : '')}
+                      className={inputClassName}
+                      placeholder="45.0"
+                      min={0}
+                      step={0.01}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Methane Recovered */}
+              {/* Advanced Fields - Collapsible */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Methane Recovered (m³)
-                </label>
-                <input
-                  type="number"
-                  value={methaneRecovered}
-                  onChange={(e) => setMethaneRecovered(e.target.value ? Number(e.target.value) : '')}
-                  className={inputClassName}
-                  placeholder="e.g., 1000"
-                  min={0}
-                  step={0.01}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Optional: Biogas/methane recovered from composting process
-                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-sm font-medium text-green-700 hover:text-green-800"
+                >
+                  {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {showAdvanced ? 'Hide' : 'Show'} Advanced Options
+                </button>
               </div>
+
+              {showAdvanced && (
+                <>
+                  {/* Environmental Impact Section */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">
+                      Environmental Impact
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Methane Recovered */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Methane Recovered (m³)
+                        </label>
+                        <input
+                          type="number"
+                          value={methaneRecovered}
+                          onChange={(e) => setMethaneRecovered(e.target.value ? Number(e.target.value) : '')}
+                          className={inputClassName}
+                          placeholder="150.0"
+                          min={0}
+                          step={0.01}
+                        />
+                      </div>
+
+                      {/* Methane Saved */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Methane Saved (kg CH₄ eq)
+                        </label>
+                        <input
+                          type="number"
+                          value={methaneSaved}
+                          onChange={(e) => setMethaneSaved(e.target.value ? Number(e.target.value) : '')}
+                          className={inputClassName}
+                          placeholder="1200.0"
+                          min={0}
+                          step={0.01}
+                        />
+                      </div>
+
+                      {/* CO2 Equivalent */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          CO₂ Equivalent (tonnes)
+                        </label>
+                        <input
+                          type="number"
+                          value={co2Equivalent}
+                          onChange={(e) => setCo2Equivalent(e.target.value ? Number(e.target.value) : '')}
+                          className={inputClassName}
+                          placeholder="30.0"
+                          min={0}
+                          step={0.01}
+                        />
+                      </div>
+
+                      {/* Recycling Rate */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Recycling Rate (%)
+                        </label>
+                        <input
+                          type="number"
+                          value={recyclingRate}
+                          onChange={(e) => setRecyclingRate(e.target.value ? Number(e.target.value) : '')}
+                          className={inputClassName}
+                          placeholder="75.0"
+                          min={0}
+                          max={100}
+                          step={0.01}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Processing Details Section */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">
+                      Processing Details
+                    </h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Disposal Method
+                      </label>
+                      <select
+                        value={disposalMethod}
+                        onChange={(e) => setDisposalMethod(e.target.value)}
+                        className={inputClassName}
+                      >
+                        <option value="">Select method...</option>
+                        <option value="Composting">Composting</option>
+                        <option value="Anaerobic Digestion">Anaerobic Digestion</option>
+                        <option value="Landfill">Landfill</option>
+                        <option value="Incineration">Incineration</option>
+                        <option value="Recycling">Recycling</option>
+                        <option value="Mixed">Mixed Methods</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Data Source
+                      </label>
+                      <input
+                        type="text"
+                        value={dataSource}
+                        onChange={(e) => setDataSource(e.target.value)}
+                        className={inputClassName}
+                        placeholder="e.g., Monthly Site Report"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes
+                      </label>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        className={inputClassName}
+                        placeholder="Additional notes or comments..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Conversion Rate Display */}
               {organicWaste && Number(organicWaste) > 0 && (

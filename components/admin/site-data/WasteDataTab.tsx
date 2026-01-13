@@ -101,8 +101,13 @@ export default function WasteDataTab() {
 
   // Calculate totals
   const totalOrganicWaste = filteredData.reduce((sum, item) => sum + item.organicWaste, 0);
+  const totalInorganicWaste = filteredData.reduce((sum, item) => sum + ((item as any).inorganicWaste || 0), 0);
+  const totalWaste = filteredData.reduce((sum, item) => sum + ((item as any).totalWaste || item.organicWaste), 0);
   const totalCompostReceived = filteredData.reduce((sum, item) => sum + item.compostReceived, 0);
   const totalMethaneRecovered = filteredData.reduce((sum, item) => sum + (item.methaneRecovered || 0), 0);
+  const totalMethaneSaved = filteredData.reduce((sum, item) => sum + ((item as any).methaneSaved || 0), 0);
+  const totalCo2Equivalent = filteredData.reduce((sum, item) => sum + ((item as any).co2Equivalent || 0), 0);
+  const totalLandfillDiverted = filteredData.reduce((sum, item) => sum + ((item as any).landfillDiverted || 0), 0);
 
   // Get years for filter (2019 to 2100)
   const years = [];
@@ -142,9 +147,16 @@ export default function WasteDataTab() {
       sortable: true,
       align: 'right',
       render: (item) => (
-        <span className="text-sm font-medium text-gray-900">
-          {item.organicWaste.toLocaleString()} kg
-        </span>
+        <div className="text-right">
+          <span className="text-sm font-medium text-gray-900 block">
+            {item.organicWaste.toLocaleString()} t
+          </span>
+          {(item as any).inorganicWaste && (
+            <span className="text-xs text-gray-500">
+              +{((item as any).inorganicWaste).toLocaleString()} t inorg.
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -153,20 +165,16 @@ export default function WasteDataTab() {
       sortable: true,
       align: 'right',
       render: (item) => (
-        <span className="text-sm text-green-700">
-          {item.compostReceived.toLocaleString()} kg
-        </span>
-      ),
-    },
-    {
-      key: 'methaneRecovered',
-      label: 'Methane Recovered',
-      sortable: true,
-      align: 'right',
-      render: (item) => (
-        <span className="text-sm text-gray-700">
-          {item.methaneRecovered ? `${item.methaneRecovered.toLocaleString()} m³` : '-'}
-        </span>
+        <div className="text-right">
+          <span className="text-sm text-green-700 block font-medium">
+            {item.compostReceived.toLocaleString()} t
+          </span>
+          {(item as any).compostQuality && (
+            <span className="text-xs text-gray-500">
+              {(item as any).compostQuality}
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -183,6 +191,44 @@ export default function WasteDataTab() {
           </Badge>
         );
       },
+    },
+    {
+      key: 'environmental',
+      label: 'Environmental Impact',
+      align: 'right',
+      render: (item) => (
+        <div className="text-right text-sm">
+          {item.methaneRecovered && (
+            <div className="text-blue-700">
+              {item.methaneRecovered.toLocaleString()} m³ CH₄
+            </div>
+          )}
+          {(item as any).methaneSaved && (
+            <div className="text-green-700 text-xs">
+              {((item as any).methaneSaved).toLocaleString()} kg saved
+            </div>
+          )}
+          {(item as any).co2Equivalent && (
+            <div className="text-emerald-700 text-xs">
+              {((item as any).co2Equivalent).toLocaleString()} t CO₂ eq
+            </div>
+          )}
+          {!item.methaneRecovered && !(item as any).methaneSaved && !(item as any).co2Equivalent && (
+            <span className="text-gray-400">-</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'landfillDiverted',
+      label: 'Landfill Diverted',
+      sortable: true,
+      align: 'right',
+      render: (item) => (
+        <span className="text-sm text-gray-700">
+          {(item as any).landfillDiverted ? `${((item as any).landfillDiverted).toLocaleString()} t` : '-'}
+        </span>
+      ),
     },
     {
       key: 'updatedAt',
@@ -213,7 +259,7 @@ export default function WasteDataTab() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 rounded-lg">
@@ -232,7 +278,7 @@ export default function WasteDataTab() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalOrganicWaste.toLocaleString()}</p>
-              <p className="text-sm text-gray-500">Organic Waste (kg)</p>
+              <p className="text-sm text-gray-500">Organic Waste (t)</p>
             </div>
           </div>
         </div>
@@ -243,7 +289,7 @@ export default function WasteDataTab() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalCompostReceived.toLocaleString()}</p>
-              <p className="text-sm text-gray-500">Compost (kg)</p>
+              <p className="text-sm text-gray-500">Compost (t)</p>
             </div>
           </div>
         </div>
@@ -255,6 +301,28 @@ export default function WasteDataTab() {
             <div>
               <p className="text-2xl font-bold text-gray-900">{totalMethaneRecovered.toLocaleString()}</p>
               <p className="text-sm text-gray-500">Methane (m³)</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <Leaf className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{totalCo2Equivalent.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">CO₂ Saved (t)</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Recycle className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{totalLandfillDiverted.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">Diverted (t)</p>
             </div>
           </div>
         </div>
