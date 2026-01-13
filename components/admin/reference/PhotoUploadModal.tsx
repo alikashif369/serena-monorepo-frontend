@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Upload, X, Image } from 'lucide-react';
+import { Upload, X, Image, FileImage, CheckCircle, XCircle } from 'lucide-react';
 import FormModal, {
   FormModalFooter,
   FormField,
@@ -22,6 +22,13 @@ interface PhotoUploadModalProps {
   onSuccess: () => void;
   sites: Site[];
   speciesList: Species[];
+}
+
+interface FileWithPreview {
+  file: File;
+  preview: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  error?: string;
 }
 
 export default function PhotoUploadModal({
@@ -46,10 +53,10 @@ export default function PhotoUploadModal({
     description: '',
     tags: [],
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
   const [tagsInput, setTagsInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragActive, setDragActive] = useState(false);
 
@@ -66,35 +73,55 @@ export default function PhotoUploadModal({
       description: '',
       tags: [],
     });
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    selectedFiles.forEach(f => URL.revokeObjectURL(f.preview));
+    setSelectedFiles([]);
     setTagsInput('');
     setErrors({});
   };
 
   // Handle file selection
-  const handleFileSelect = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      showToast('Please select an image file (JPEG, PNG, or WebP)', 'error');
-      return;
-    }
-
+  const handleFileSelect = (files: FileList) => {
+    const validFiles: FileWithPreview[] = [];
     const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      showToast('File size exceeds 10MB limit', 'error');
-      return;
-    }
+    
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        showToast(`${file.name} is not an image file`, 'error');
+        return;
+      }
 
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setErrors((prev) => ({ ...prev, file: '' }));
+      if (file.size > maxSize) {
+        showToast(`${file.name} exceeds 10MB limit`, 'error');
+        return;
+      }
+
+      validFiles.push({
+        file,
+        preview: URL.createObjectURL(file),
+        status: 'pending',
+      });
+    });
+
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+      setErrors((prev) => ({ ...prev, file: '' }));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => {
+      const newFiles = [...prev];
+      URL.revokeObjectURL(newFiles[index].preview);
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect(e.dataTransfer.files);
     }
   };
 
@@ -111,8 +138,8 @@ export default function PhotoUploadModal({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!selectedFile) {
-      newErrors.file = 'Please select a photo to upload';
+    if (selectedFiles.length === 0) {
+      newErrors.file = 'Please select at least one photo to upload';
     }
 
     if ((formData.category === 'EVENT' || formData.category === 'SITE' || formData.category === 'COMMUNITY') && !formData.siteId) {
@@ -127,31 +154,76 @@ export default function PhotoUploadModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle submit
+  // Handle submit - Upload all files
   const handleSubmit = async () => {
-    if (!validate() || !selectedFile) return;
+    if (!validate() || selectedFiles.length === 0) return;
 
-    setLoading(true);
-    try {
-      const tags = tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
+    setUploading(true);
+    const tags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
-      await uploadPhoto({
-        ...formData,
-        tags,
-        file: selectedFile,
+    let successCount = 0;
+    let failCount = 0;
+
+    // Upload files one by one
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const fileWithPreview = selectedFiles[i];
+      
+      // Update status to uploading
+      setSelectedFiles(prev => {
+        const updated = [...prev];
+        updated[i] = { ...updated[i], status: 'uploading' };
+        return updated;
       });
 
-      showToast('Photo uploaded successfully', 'success');
-      resetForm();
+      try {
+        await uploadPhoto({
+          ...formData,
+          tags,
+          file: fileWithPreview.file,
+        });
+
+        // Update status to success
+        setSelectedFiles(prev => {
+          const updated = [...prev];
+          updated[i] = { ...updated[i], status: 'success' };
+          return updated;
+        });
+        
+        successCount++;
+      } catch (error: any) {
+        // Update status to error
+        setSelectedFiles(prev => {
+          const updated = [...prev];
+          updated[i] = { 
+            ...updated[i], 
+            status: 'error',
+            error: error.message || 'Upload failed'
+          };
+          return updated;
+        });
+        
+        failCount++;
+      }
+    }
+
+    setUploading(false);
+    
+    if (successCount > 0) {
+      showToast(
+        `${successCount} photo${successCount > 1 ? 's' : ''} uploaded successfully${failCount > 0 ? `, ${failCount} failed` : ''}`,
+        failCount > 0 ? 'warning' : 'success'
+      );
       onSuccess();
-      onClose();
-    } catch (error: any) {
-      showToast(error.message || 'Failed to upload photo', 'error');
-    } finally {
-      setLoading(false);
+      
+      if (failCount === 0) {
+        resetForm();
+        onClose();
+      }
+    } else {
+      showToast('All uploads failed', 'error');
     }
   };
 
@@ -177,22 +249,27 @@ export default function PhotoUploadModal({
     <FormModal
       open={open}
       onClose={() => {
-        resetForm();
-        onClose();
+        if (!uploading) {
+          resetForm();
+          onClose();
+        }
       }}
-      title="Upload Photo"
-      description="Upload a new photo with metadata and categorization"
+      title="Upload Photos"
+      description={`Upload ${selectedFiles.length > 0 ? `${selectedFiles.length} ` : ''}photo${selectedFiles.length !== 1 ? 's' : ''} with metadata and categorization`}
       size="xl"
-      loading={loading}
+      loading={uploading}
       footer={
         <FormModalFooter
           onCancel={() => {
-            resetForm();
-            onClose();
+            if (!uploading) {
+              resetForm();
+              onClose();
+            }
           }}
           onSubmit={handleSubmit}
-          submitLabel="Upload Photo"
-          loading={loading}
+          submitLabel={selectedFiles.length > 1 ? `Upload ${selectedFiles.length} Photos` : 'Upload Photo'}
+          loading={uploading}
+          disabled={uploading}
         />
       }
     >
@@ -200,7 +277,7 @@ export default function PhotoUploadModal({
         {/* File Upload Area */}
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">
-            Photo <span className="text-red-500">*</span>
+            Photos <span className="text-red-500">*</span>
           </label>
           <div
             className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
@@ -214,30 +291,65 @@ export default function PhotoUploadModal({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
           >
-            {previewUrl ? (
-              <div className="relative inline-block">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-48 rounded-lg mx-auto"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPreviewUrl(null);
-                  }}
-                  className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <p className="mt-2 text-sm text-gray-600">{selectedFile?.name}</p>
+            {selectedFiles.length > 0 ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                  {selectedFiles.map((fileWithPreview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={fileWithPreview.preview}
+                        alt={fileWithPreview.file.name}
+                        className="w-full h-24 object-cover rounded-lg"
+                      />
+                      {/* Status overlay */}
+                      {fileWithPreview.status !== 'pending' && (
+                        <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                          {fileWithPreview.status === 'uploading' && (
+                            <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
+                          )}
+                          {fileWithPreview.status === 'success' && (
+                            <CheckCircle className="w-8 h-8 text-green-400" />
+                          )}
+                          {fileWithPreview.status === 'error' && (
+                            <XCircle className="w-8 h-8 text-red-400" />
+                          )}
+                        </div>
+                      )}
+                      {/* Remove button (only for pending files) */}
+                      {fileWithPreview.status === 'pending' && !uploading && (
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                      <p className="mt-1 text-xs text-gray-600 truncate">{fileWithPreview.file.name}</p>
+                      {fileWithPreview.error && (
+                        <p className="text-xs text-red-500 truncate" title={fileWithPreview.error}>
+                          {fileWithPreview.error}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {!uploading && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-4 py-2 bg-green-900 text-white text-sm rounded-lg hover:bg-green-800 transition inline-flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Add More Photos
+                  </button>
+                )}
               </div>
             ) : (
               <>
-                <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <FileImage className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-sm text-gray-600 mb-2">
-                  Drag and drop a photo here, or click to select
+                  Drag and drop photos here, or click to select
                 </p>
                 <button
                   type="button"
@@ -245,10 +357,10 @@ export default function PhotoUploadModal({
                   className="px-4 py-2 bg-green-900 text-white text-sm rounded-lg hover:bg-green-800 transition inline-flex items-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
-                  Select Photo
+                  Select Photos
                 </button>
                 <p className="mt-2 text-xs text-gray-500">
-                  Supports JPEG, PNG, WebP (max 10MB)
+                  Supports JPEG, PNG, WebP (max 10MB per file). You can select multiple files.
                 </p>
               </>
             )}
@@ -256,8 +368,10 @@ export default function PhotoUploadModal({
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
               className="hidden"
+              multiple
+              disabled={uploading}
             />
           </div>
           {errors.file && <p className="mt-1 text-sm text-red-500">{errors.file}</p>}
@@ -292,7 +406,7 @@ export default function PhotoUploadModal({
                 value={formData.siteId || ''}
                 onChange={(e) => handleChange('siteId', e.target.value ? parseInt(e.target.value) : undefined)}
                 className={inputClassName}
-                disabled={loading}
+                disabled={uploading}
               >
                 <option value="">Select a site...</option>
                 {sites.map((site) => (
@@ -311,7 +425,7 @@ export default function PhotoUploadModal({
                 value={formData.speciesId || ''}
                 onChange={(e) => handleChange('speciesId', e.target.value ? parseInt(e.target.value) : undefined)}
                 className={inputClassName}
-                disabled={loading}
+                disabled={uploading}
               >
                 <option value="">Select a species...</option>
                 {speciesList.map((species) => (
@@ -334,7 +448,7 @@ export default function PhotoUploadModal({
                 placeholder="e.g., 2024"
                 min={2019}
                 max={2100}
-                disabled={loading}
+                disabled={uploading}
               />
             </FormField>
           )}
@@ -349,7 +463,7 @@ export default function PhotoUploadModal({
             onChange={(e) => handleChange('caption', e.target.value)}
             className={inputClassName}
             placeholder="Brief caption for the photo"
-            disabled={loading}
+            disabled={uploading}
           />
         </FormField>
 
@@ -360,7 +474,7 @@ export default function PhotoUploadModal({
             onChange={(e) => handleChange('description', e.target.value)}
             className={`${inputClassName} h-20 resize-none`}
             placeholder="Detailed description of the photo..."
-            disabled={loading}
+            disabled={uploading}
           />
         </FormField>
 
@@ -377,7 +491,7 @@ export default function PhotoUploadModal({
                 onChange={(e) => handleChange('latitude', e.target.value ? parseFloat(e.target.value) : undefined)}
                 className={inputClassName}
                 placeholder="e.g., 35.3095"
-                disabled={loading}
+                disabled={uploading}
               />
             </FormField>
             <FormField label="Longitude" htmlFor="photo-lng">
@@ -389,7 +503,7 @@ export default function PhotoUploadModal({
                 onChange={(e) => handleChange('longitude', e.target.value ? parseFloat(e.target.value) : undefined)}
                 className={inputClassName}
                 placeholder="e.g., 75.6927"
-                disabled={loading}
+                disabled={uploading}
               />
             </FormField>
           </div>
@@ -404,7 +518,7 @@ export default function PhotoUploadModal({
             onChange={(e) => setTagsInput(e.target.value)}
             className={inputClassName}
             placeholder="e.g., plantation, trees, 2024, spring"
-            disabled={loading}
+            disabled={uploading}
           />
         </FormField>
       </div>

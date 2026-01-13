@@ -141,20 +141,32 @@ export default function PhotosTab() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Photo Gallery"
-        description="Upload and manage site photos, event photos, and species images"
+        description="Upload and manage photos for sites, events, communities, and species - use them across your dashboard"
         actions={
           <button
             onClick={handleUploadClick}
             className="rounded-lg bg-green-900 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 transition inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Upload Photo
+            Upload Photos
           </button>
         }
       />
 
       {/* Filters */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+        {/* Info Banner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
+          <Image className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div className="text-sm">
+            <p className="text-blue-900 font-medium mb-1">Photo Management</p>
+            <p className="text-blue-700">
+              Upload photos for your sites, events, communities, and species. These photos can be used throughout your dashboard and public pages. 
+              Supports bulk upload with drag & drop.
+            </p>
+          </div>
+        </div>
+        
         <div className="flex flex-wrap gap-4">
           {/* Search */}
           <div className="flex-1 min-w-[200px]">
@@ -362,7 +374,7 @@ interface PhotoGridCardProps {
 
 function PhotoGridCard({ photo, onView, onEdit, onDelete }: PhotoGridCardProps) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden group">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden group hover:shadow-lg transition-shadow">
       <div className="relative aspect-square">
         <img
           src={photo.minioUrl}
@@ -376,43 +388,48 @@ function PhotoGridCard({ photo, onView, onEdit, onDelete }: PhotoGridCardProps) 
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <button
             onClick={onView}
-            className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100"
-            title="View"
+            className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100 transition"
+            title="View Full Image"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={onEdit}
-            className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100"
-            title="Edit"
+            className="p-2 bg-white rounded-full text-gray-700 hover:bg-gray-100 transition"
+            title="Edit Metadata"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button
             onClick={onDelete}
-            className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50"
-            title="Delete"
+            className="p-2 bg-white rounded-full text-red-600 hover:bg-red-50 transition"
+            title="Delete Photo"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
         {/* Category badge */}
         <div className="absolute top-2 left-2">
-          <span className={`px-2 py-0.5 text-xs font-medium rounded ${getCategoryColor(photo.category)}`}>
+          <span className={`px-2 py-0.5 text-xs font-medium rounded shadow-sm ${getCategoryColor(photo.category)}`}>
             {getCategoryLabel(photo.category)}
           </span>
         </div>
       </div>
       <div className="p-3">
-        <p className="text-sm font-medium text-gray-900 truncate">
+        <p className="text-sm font-medium text-gray-900 truncate" title={photo.caption || photo.originalFileName}>
           {photo.caption || photo.originalFileName}
         </p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 mt-1 truncate" title={photo.site?.name || photo.species?.botanicalName || '-'}>
           {photo.site?.name || photo.species?.botanicalName || '-'}
         </p>
-        {photo.year && (
-          <p className="text-xs text-gray-400 mt-1">{photo.year}</p>
-        )}
+        <div className="flex items-center justify-between mt-2">
+          {photo.year && (
+            <p className="text-xs text-gray-400">{photo.year}</p>
+          )}
+          {photo.tags.length > 0 && (
+            <span className="text-xs text-gray-400">{photo.tags.length} tag{photo.tags.length > 1 ? 's' : ''}</span>
+          )}
+        </div>
       </div>
     </div>
   );
