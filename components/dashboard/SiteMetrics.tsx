@@ -44,30 +44,32 @@ function StatCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
-      className="relative group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all duration-500 overflow-hidden"
+      className="relative group bg-gradient-to-br from-white via-gray-50/30 to-white rounded-3xl border-2 border-gray-100 p-7 shadow-lg hover:shadow-2xl hover:border-gray-200 transition-all duration-500 overflow-hidden"
     >
       {/* Decorative background accent */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-150 group-hover:bg-emerald-50/50" />
+      <div className="absolute top-0 right-0 w-32 h-32 opacity-30 rounded-full -mr-16 -mt-16 transition-all duration-700 group-hover:scale-150 blur-3xl" 
+           style={{ backgroundColor: `${color}30` }} />
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/50 rounded-full -ml-12 -mb-12 blur-2xl" />
       
-      <div className="flex items-center gap-4 mb-4 relative z-10">
+      <div className="flex items-start gap-5 mb-5 relative z-10">
         <div
-          className="p-3 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm"
-          style={{ backgroundColor: `${color}15` }}
+          className="p-4 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 shadow-lg ring-2 ring-white"
+          style={{ backgroundColor: `${color}20` }}
         >
-          <Icon className="w-5 h-5" style={{ color }} />
+          <Icon className="w-6 h-6" style={{ color }} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] truncate">
+        <div className="flex-1 min-w-0 pt-1">
+          <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-[0.2em] truncate">
             {label}
           </p>
         </div>
       </div>
 
       <div className="relative z-10">
-        <p className="text-3xl font-serif text-[#115e59] leading-none tracking-tight">
+        <p className="text-4xl font-serif text-[#115e59] leading-none tracking-tight font-bold">
           {typeof value === 'number' ? formatNumber(value) : value}
           {unit && (
-            <span className="text-sm font-sans font-bold text-gray-300 ml-2 align-middle uppercase tracking-widest">
+            <span className="text-base font-sans font-extrabold text-gray-400 ml-3 align-middle uppercase tracking-[0.15em]">
               {unit}
             </span>
           )}

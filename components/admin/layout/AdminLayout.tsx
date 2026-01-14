@@ -74,36 +74,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     Vector Drawing
                     <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-[#b08d4b] transition-all duration-300 scale-x-0 group-hover:scale-x-100 origin-left" />
                   </Link>
-                  
+
                   {/* Dropdown Items */}
                   {[
                     { label: 'Hierarchy Management', items: [
                       { href: '/admin/organizations', label: 'Organizations' },
-                      { href: '/admin/properties', label: 'Properties' },
-                      { href: '/admin/sites', label: 'Sites' },
                       { href: '/admin/regions', label: 'Regions' },
+                      { href: '/admin/categories', label: 'Categories' },
+                      { href: '/admin/subcategories', label: 'Sub-Categories' },
+                      { href: '/admin/sites', label: 'Sites' },
                     ]},
                     { label: 'Site Data', items: [
+                      { href: '/admin/yearly-metrics', label: 'Yearly Metrics' },
                       { href: '/admin/plantation-data', label: 'Plantation Data' },
                       { href: '/admin/solar-data', label: 'Solar Data' },
                       { href: '/admin/waste-data', label: 'Waste Data' },
                       { href: '/admin/sewage-data', label: 'Sewage Data' },
                       { href: '/admin/community-data', label: 'Community Data' },
-                      { href: '/admin/yearly-metrics', label: 'Yearly Metrics' },
                     ]},
                     { label: 'Reference Data', items: [
-                      { href: '/admin/species', label: 'Species' },
-                      { href: '/admin/waste-types', label: 'Waste Types' },
-                      { href: '/admin/units', label: 'Units' },
+                      { href: '/admin/species', label: 'Species Catalog' },
+                      { href: '/admin/photos', label: 'Photo Management' },
                     ]},
                     { label: 'Spatial Data', items: [
-                      { href: '/admin/rasters', label: 'Rasters' },
-                      { href: '/admin/tiles', label: 'Tiles' },
+                      { href: '/admin/rasters', label: 'Raster Upload' },
                     ]},
                     { label: 'System', items: [
-                      { href: '/admin/users', label: 'Users' },
-                      { href: '/admin/settings', label: 'Settings' },
-                      { href: '/admin/audit-logs', label: 'Audit Logs' },
+                      { href: '/admin/users', label: 'User Management' },
+                      { href: '/admin/category-summaries', label: 'Category Summaries' },
+                      { href: '/admin/data-migration', label: 'Data Migration' },
                     ]},
                   ].map((group) => (
                     <div key={group.label} className="relative group/nav flex-shrink-0">
@@ -223,31 +222,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {[
                       { label: 'Hierarchy Management', items: [
                         { href: '/admin/organizations', label: 'Organizations' },
-                        { href: '/admin/properties', label: 'Properties' },
-                        { href: '/admin/sites', label: 'Sites' },
                         { href: '/admin/regions', label: 'Regions' },
+                        { href: '/admin/categories', label: 'Categories' },
+                        { href: '/admin/subcategories', label: 'Sub-Categories' },
+                        { href: '/admin/sites', label: 'Sites' },
                       ]},
                       { label: 'Site Data', items: [
+                        { href: '/admin/yearly-metrics', label: 'Yearly Metrics' },
                         { href: '/admin/plantation-data', label: 'Plantation Data' },
                         { href: '/admin/solar-data', label: 'Solar Data' },
                         { href: '/admin/waste-data', label: 'Waste Data' },
                         { href: '/admin/sewage-data', label: 'Sewage Data' },
                         { href: '/admin/community-data', label: 'Community Data' },
-                        { href: '/admin/yearly-metrics', label: 'Yearly Metrics' },
                       ]},
                       { label: 'Reference Data', items: [
-                        { href: '/admin/species', label: 'Species' },
-                        { href: '/admin/waste-types', label: 'Waste Types' },
-                        { href: '/admin/units', label: 'Units' },
+                        { href: '/admin/species', label: 'Species Catalog' },
+                        { href: '/admin/photos', label: 'Photo Management' },
                       ]},
                       { label: 'Spatial Data', items: [
-                        { href: '/admin/rasters', label: 'Rasters' },
-                        { href: '/admin/tiles', label: 'Tiles' },
+                        { href: '/admin/rasters', label: 'Raster Upload' },
                       ]},
                       { label: 'System', items: [
-                        { href: '/admin/users', label: 'Users' },
-                        { href: '/admin/settings', label: 'Settings' },
-                        { href: '/admin/audit-logs', label: 'Audit Logs' },
+                        { href: '/admin/users', label: 'User Management' },
+                        { href: '/admin/category-summaries', label: 'Category Summaries' },
+                        { href: '/admin/data-migration', label: 'Data Migration' },
                       ]},
                     ].map((group) => (
                       <div key={group.label} className="py-2 border-t border-[#115e59]/10">

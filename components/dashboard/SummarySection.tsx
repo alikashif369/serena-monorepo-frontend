@@ -141,34 +141,37 @@ export default function SummarySection({
       transition={{ delay: 0.2 }}
       className="bg-white border-t border-gray-100 shadow-[0_-1px_10px_rgba(0,0,0,0.02)] relative z-10"
     >
-      <div className="max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12 py-12">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Section header */}
-        <div className="mb-10 text-center md:text-left border-b border-gray-100 pb-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <span className="text-[#b08d4b] text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">
-                {hasSingleSite ? "Deep-Dive Site Analytics" : "Ecosystem Performance Overview"}
-              </span>
-              <h2 className="text-4xl md:text-5xl font-serif text-[#115e59] font-bold">
+        <div className="mb-12 text-center md:text-left pb-10 border-b border-gradient-to-r from-transparent via-gray-200 to-transparent">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-emerald-700 text-[11px] font-extrabold uppercase tracking-[0.25em] bg-emerald-50 px-3 py-1 rounded-full">
+                  {hasSingleSite ? "Deep-Dive Site Analytics" : "Ecosystem Performance Overview"}
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-serif text-[#115e59] font-bold tracking-tight mb-3 leading-tight">
                 {hasSingleSite ? selectedSite?.name : "Summary Overview"}
               </h2>
+              {hasSingleSite && selectedSite && (
+                <p className="text-gray-500 text-base max-w-2xl font-normal leading-relaxed">
+                  {getCategoryDescription(selectedSite)}
+                </p>
+              )}
             </div>
-            {hasSingleSite && selectedSite && (
-              <p className="text-gray-400 text-sm max-w-md font-medium leading-relaxed">
-                {getCategoryDescription(selectedSite)}
-              </p>
-            )}
           </div>
         </div>
 
         {hasSingleSite && selectedSite ? (
           // Single site view - Dynamic based on category type
           <div className="space-y-16">
-            {/* Plantation: Show Land Cover Chart + Site Details Panel */}
+            {/* Plantation: Show Land Cover Chart + Site Details Panel - Updated Layout for balance */}
             {isPlantation && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                {/* Left Side: Land Cover Chart (7 cols) */}
-                <div className="lg:col-span-7 h-full">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                {/* Left Side: Land Cover Chart (1 col) */}
+                <div className="w-full">
                   <LandCoverChart
                     metrics={yearlyMetrics}
                     loading={loading.metrics}
@@ -176,8 +179,9 @@ export default function SummarySection({
                   />
                 </div>
 
-                {/* Right Side: Site Details (5 cols) */}
-                <div className="lg:col-span-5 h-full">
+                {/* Right Side: Site Details (1 col) */ }
+                {/* Fixed height to match chart somewhat or allow natural growth */}
+                <div className="w-full">
                   <SiteDetailsPanel
                     site={selectedSite}
                     metrics={yearlyMetrics}
@@ -221,7 +225,7 @@ export default function SummarySection({
 
             {/* Middle Row: Visual Documentation & Biodiversity - Only for Plantation/Restoration */}
             {isPlantation && (
-              <div className="pt-12 border-t border-gray-50">
+              <div className="pt-20 mt-16 border-t-2 border-gray-100">
                 <SiteVisuals
                   species={siteSpecies}
                   photos={sitePhotos}
@@ -232,12 +236,21 @@ export default function SummarySection({
             )}
 
             {/* Bottom Row: Site Specific Metrics */}
-            <div className="pt-16 border-t border-gray-50">
-                <SiteMetrics
-                  site={selectedSite}
-                  selectedYear={effectiveSelectedYear}
-                  loading={loading.metrics}
-                />
+            <div className="pt-20 mt-16 border-t-2 border-gray-100">
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-1 h-1 bg-amber-500 rounded-full"></div>
+                  <span className="text-amber-700 text-[11px] font-extrabold uppercase tracking-[0.25em]">
+                    Performance Indicators
+                  </span>
+                </div>
+                <h3 className="text-3xl font-serif font-bold text-gray-900">Key Metrics Overview</h3>
+              </div>
+              <SiteMetrics
+                site={selectedSite}
+                selectedYear={effectiveSelectedYear}
+                loading={loading.metrics}
+              />
             </div>
           </div>
         ) : (

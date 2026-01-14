@@ -219,10 +219,11 @@ export interface Species {
   englishName?: string;
   description?: string;
   uses?: string;
-  image1Url?: string;
-  image2Url?: string;
-  image3Url?: string;
-  image4Url?: string;
+  // All 4 reference images are now required
+  image1Url: string;  // Habitat view - REQUIRED
+  image2Url: string;  // Leaf close-up - REQUIRED
+  image3Url: string;  // Bark texture - REQUIRED
+  image4Url: string;  // Seed/flower - REQUIRED
 }
 
 export interface SiteSpecies {

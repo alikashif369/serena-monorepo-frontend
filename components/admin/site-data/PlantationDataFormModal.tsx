@@ -20,6 +20,7 @@ import {
   Region,
   Organization,
 } from '@/lib/admin/hierarchyApi';
+import { Species, listSpecies } from '@/lib/admin/speciesApi';
 import { useToast } from '@/components/ToastContext';
 
 interface PlantationDataFormModalProps {
@@ -55,9 +56,21 @@ export default function PlantationDataFormModal({
   const [selectedOrgId, setSelectedOrgId] = useState<number | undefined>(undefined);
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>(undefined);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined);
-  const [speciesInput, setSpeciesInput] = useState('');
+  
+  // Species handling
+  const [availableSpecies, setAvailableSpecies] = useState<Species[]>([]);
+  const [speciesSearch, setSpeciesSearch] = useState('');
+  const [selectedSpeciesId, setSelectedSpeciesId] = useState<string>('');
+  
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Fetch species list
+  useEffect(() => {
+    if (open) {
+      listSpecies().then(setAvailableSpecies).catch(console.error);
+    }
+  }, [open]);
 
   // Filtered dropdown options
   const filteredRegions = selectedOrgId
@@ -109,7 +122,8 @@ export default function PlantationDataFormModal({
       setSelectedRegionId(undefined);
       setSelectedCategoryId(undefined);
     }
-    setSpeciesInput('');
+    setSpeciesSearch('');
+    setSelectedSpeciesId('');
     setErrors({});
   }, [editingData, open, sites, categories, regions, organizations]);
 
@@ -163,14 +177,22 @@ export default function PlantationDataFormModal({
   };
 
   const addSpecies = () => {
-    const trimmed = speciesInput.trim().toUpperCase();
-    if (trimmed && !formData.species.includes(trimmed)) {
+    if (!selectedSpeciesId) return;
+    
+    // Find species code from ID (assuming ID is passed, but we need code/name for storage as string array)
+    const species = availableSpecies.find(s => s.id.toString() === selectedSpeciesId);
+    if (!species) return;
+
+    // Use english name or scientific name or code as the identifier
+    const identifier = species.englishName || species.scientificName; // Or species.code if that's what backend expects
+
+    if (identifier && !formData.species.includes(identifier)) {
       setFormData((prev) => ({
         ...prev,
-        species: [...prev.species, trimmed],
+        species: [...prev.species, identifier],
       }));
     }
-    setSpeciesInput('');
+    setSelectedSpeciesId('');
   };
 
   const removeSpecies = (sp: string) => {
@@ -179,6 +201,14 @@ export default function PlantationDataFormModal({
       species: prev.species.filter((s) => s !== sp),
     }));
   };
+  
+  // Filter species for dropdown search
+  const filteredSpeciesList = availableSpecies.filter(s => 
+    !formData.species.includes(s.englishName || s.scientificName) && // Exclude already selected
+    (s.englishName.toLowerCase().includes(speciesSearch.toLowerCase()) || 
+     s.scientificName.toLowerCase().includes(speciesSearch.toLowerCase()) ||
+     (s.localName && s.localName.toLowerCase().includes(speciesSearch.toLowerCase())))
+  );
 
   return (
     <FormModal
@@ -296,57 +326,64 @@ export default function PlantationDataFormModal({
         </FormField>
 
         {/* Species */}
-        <div className="space-y-2">
-          <FormField label="Species Codes" htmlFor="plantation-species">
-            <div className="flex gap-2">
-              <input
-                id="plantation-species"
-                type="text"
-                value={speciesInput}
-                onChange={(e) => setSpeciesInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addSpecies();
-                  }
-                }}
-                className={inputClassName}
-                placeholder="e.g., PINWAL"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={addSpecies}
-                className="px-4 py-2 bg-green-900 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition"
+        <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+          <label className="block text-sm font-medium text-gray-700">Species Selection</label>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-grow relative">
+              <select
+                value={selectedSpeciesId}
+                onChange={(e) => setSelectedSpeciesId(e.target.value)}
+                className={selectClassName}
                 disabled={loading}
               >
-                Add
-              </button>
+                <option value="">Select a species...</option>
+                {filteredSpeciesList.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.englishName || sp.scientificName} ({sp.localName || 'No local name'})
+                  </option>
+                ))}
+              </select>
             </div>
-          </FormField>
+            
+            <button
+              type="button"
+              onClick={addSpecies}
+              disabled={!selectedSpeciesId || loading}
+              className="px-4 py-2 bg-green-900 text-white rounded-lg text-sm font-medium hover:bg-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              Add Species
+            </button>
+          </div>
 
-          {formData.species.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.species.map((sp) => (
-                <span
-                  key={sp}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm"
-                >
-                  {sp}
-                  <button
-                    type="button"
-                    onClick={() => removeSpecies(sp)}
-                    className="p-0.5 hover:bg-green-200 rounded-full"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
+          {/* Helper for searching if list is long (optional enhancement, standard browser select has basic search) */}
+
+          {formData.species.length > 0 ? (
+             <div className="mt-3">
+               <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Selected Species:</p>
+               <div className="flex flex-wrap gap-2">
+                 {formData.species.map((sp) => (
+                   <span
+                     key={sp}
+                     className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-white border border-green-200 text-green-800 rounded-full text-sm shadow-sm"
+                   >
+                     <span className="font-medium">{sp}</span>
+                     <button
+                       type="button"
+                       onClick={() => removeSpecies(sp)}
+                       className="p-1 hover:bg-green-100 rounded-full text-green-600 hover:text-green-800 transition-colors"
+                     >
+                       <X className="w-3.5 h-3.5" />
+                     </button>
+                   </span>
+                 ))}
+               </div>
+             </div>
+          ) : (
+             <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
+                <p className="text-xs text-gray-400">No species selected yet.</p>
+             </div>
           )}
-          <p className="text-xs text-gray-500">
-            Enter species codes (e.g., PINWAL, CEDDAR). Press Enter or click Add to include.
-          </p>
         </div>
       </div>
     </FormModal>

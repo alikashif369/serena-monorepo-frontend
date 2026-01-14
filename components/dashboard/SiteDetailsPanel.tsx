@@ -85,12 +85,17 @@ function QuickStatCard({
   valueColor: string;
 }) {
   return (
-    <div className={`p-4 bg-gradient-to-br ${bgGradient} rounded-2xl border ${borderColor} group hover:shadow-md transition-all`}>
-      <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm mb-2 group-hover:scale-105 transition-transform">
-        <Icon className={`w-4 h-4 ${iconColor}`} />
+    <div className={`p-5 bg-gradient-to-br ${bgGradient} rounded-2xl border ${borderColor} group hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+      {/* Decorative element */}
+      <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/30 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+      
+      <div className="relative z-10">
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg mb-3 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+        <p className={`text-[10px] uppercase font-extrabold tracking-[0.2em] ${labelColor} mb-2`}>{label}</p>
+        <p className={`text-2xl font-bold ${valueColor} tracking-tight`}>{value}</p>
       </div>
-      <p className={`text-[9px] uppercase font-black tracking-[0.2em] ${labelColor} mb-0.5`}>{label}</p>
-      <p className={`text-lg font-bold ${valueColor}`}>{value}</p>
     </div>
   );
 }
@@ -432,40 +437,41 @@ export default function SiteDetailsPanel({
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden h-full flex flex-col"
+        className="bg-gradient-to-br from-white via-gray-50/30 to-white rounded-[2rem] shadow-2xl border-2 border-gray-100 overflow-hidden h-full flex flex-col"
       >
         {/* Header with Site Identity */}
-        <div className="p-8 relative overflow-hidden flex-shrink-0">
+        <div className="p-7 relative overflow-hidden flex-shrink-0 border-b-2 border-gray-50">
           <div
-            className="absolute inset-0 opacity-[0.03]"
+            className="absolute inset-0 opacity-[0.04]"
             style={{ backgroundColor: categoryColor }}
           />
-          <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-50 rounded-full -mr-20 -mt-20 blur-3xl opacity-40" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full -mr-24 -mt-24 blur-3xl opacity-50" />
 
           <div className="flex items-start justify-between relative z-10">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-3">
-                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-emerald-100/50">
+                <span className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-extrabold uppercase tracking-[0.15em] rounded-xl shadow-lg flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
                   Active Site
                 </span>
                 {site.category && (
                   <span
-                    className="text-[10px] font-bold uppercase tracking-widest px-2"
-                    style={{ color: categoryColor }}
+                    className="text-[10px] font-extrabold uppercase tracking-[0.15em] px-3 py-1.5 rounded-xl"
+                    style={{ color: categoryColor, backgroundColor: `${categoryColor}10` }}
                   >
                     {site.category.name}
                   </span>
                 )}
               </div>
-              <h3 className="text-3xl font-serif text-[#115e59] mb-2 font-bold leading-tight">
+              <h3 className="text-2xl font-serif text-[#115e59] mb-2 font-bold leading-tight tracking-tight">
                 {site.name}
               </h3>
-              <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
-                <MapPin className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                <MapPin className="w-4 h-4 text-emerald-500" />
                 <span>{site.city || site.district || "Location Data Pending"}</span>
                 {site.subCategory && (
                   <>
-                    <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                    <span className="w-1 h-1 bg-gray-300 rounded-full" />
                     <span>{site.subCategory.name}</span>
                   </>
                 )}
@@ -474,7 +480,7 @@ export default function SiteDetailsPanel({
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-3 rounded-full bg-gray-50 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-all duration-300 transform hover:rotate-90"
+                className="p-3 rounded-xl bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all duration-300 transform hover:rotate-90 shadow-sm hover:shadow-md border border-gray-100 hover:border-red-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -482,17 +488,17 @@ export default function SiteDetailsPanel({
           </div>
         </div>
 
-        {/* Main Content - No forced stretching */}
-        <div className="p-8 pt-0 space-y-8">
+        {/* Main Content */}
+        <div className="p-7 pt-6 space-y-6">
           {/* Quick Stats Grid - 2x2 - Dynamic based on category type */}
           {renderQuickStats(site, species, photos, selectedYear)}
 
           {/* Data Year Indicator */}
           {metrics?.year && (
-            <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Layers className="w-4 h-4" />
-                <span className="font-medium">Analysis Year: <span className="text-emerald-600 font-bold">{metrics.year}</span></span>
+            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-center gap-3">
+              <div className="flex items-center gap-2.5 text-xs bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-2.5 rounded-xl border border-emerald-100">
+                <Layers className="w-4 h-4 text-emerald-600" />
+                <span className="font-semibold text-gray-600">Analysis Year: <span className="text-emerald-700 font-extrabold">{metrics.year}</span></span>
               </div>
             </div>
           )}

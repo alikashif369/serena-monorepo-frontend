@@ -97,21 +97,29 @@ export default function SpeciesTab() {
       render: (item) => {
         const images = getSpeciesImages(item);
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {images.length > 0 ? (
-              <img
-                src={images[0]}
-                alt={item.scientificName}
-                className="w-10 h-10 rounded-lg object-cover"
-              />
+              <div className="relative group">
+                <img
+                  src={images[0]}
+                  alt={item.scientificName}
+                  className="w-14 h-14 rounded-xl object-cover shadow-sm ring-2 ring-green-100 transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
             ) : (
-              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                <Leaf className="w-5 h-5 text-green-600" />
+              <div className="w-14 h-14 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl flex items-center justify-center shadow-sm ring-2 ring-green-100">
+                <Leaf className="w-6 h-6 text-green-600" />
               </div>
             )}
-            <div>
-              <div className="font-medium text-gray-900 italic">{item.scientificName}</div>
-              <div className="text-xs text-gray-500">{item.code || '-'}</div>
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 italic text-base mb-0.5">{item.scientificName}</div>
+              {item.code && (
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-50 rounded-md">
+                  <div className="w-1 h-1 bg-green-500 rounded-full" />
+                  <span className="text-xs font-medium text-green-700">{item.code}</span>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -122,15 +130,34 @@ export default function SpeciesTab() {
       label: 'Local Name',
       sortable: true,
       render: (item) => (
-        <span className="text-sm text-gray-700">{item.localName || '-'}</span>
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-gray-800">{item.localName || '-'}</span>
+          {item.englishName && (
+            <span className="text-xs text-gray-500">{item.englishName}</span>
+          )}
+        </div>
       ),
     },
     {
-      key: 'englishName',
-      label: 'English Name',
-      sortable: true,
+      key: 'uses',
+      label: 'Uses',
       render: (item) => (
-        <span className="text-sm text-gray-700">{item.englishName || '-'}</span>
+        <div className="max-w-xs">
+          {item.uses ? (
+            <div className="flex flex-wrap gap-1">
+              {item.uses.split(',').slice(0, 3).map((use, idx) => (
+                <span key={idx} className="inline-block text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-medium">
+                  {use.trim()}
+                </span>
+              ))}
+              {item.uses.split(',').length > 3 && (
+                <span className="inline-block text-[10px] text-gray-500 px-1">+{item.uses.split(',').length - 3}</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-sm text-gray-400">-</span>
+          )}
+        </div>
       ),
     },
     {
@@ -139,10 +166,23 @@ export default function SpeciesTab() {
       align: 'center',
       render: (item) => {
         const count = getSpeciesImages(item).length;
+        const percentage = (count / 4) * 100;
         return (
-          <Badge variant={count > 0 ? 'success' : 'default'}>
-            {count}/4
-          </Badge>
+          <div className="flex flex-col items-center gap-2">
+            <Badge variant={count === 4 ? 'success' : count > 0 ? 'warning' : 'default'}>
+              {count}/4
+            </Badge>
+            {count > 0 && (
+              <div className="w-12 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all ${
+                    count === 4 ? 'bg-green-500' : count >= 2 ? 'bg-amber-500' : 'bg-blue-500'
+                  }`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            )}
+          </div>
         );
       },
     },

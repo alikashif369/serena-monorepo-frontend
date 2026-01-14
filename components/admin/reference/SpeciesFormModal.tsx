@@ -95,6 +95,16 @@ export default function SpeciesFormModal({
     }
   }, [formData.scientificName, autoCode]);
 
+  // URL validation helper
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Validation
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -123,6 +133,31 @@ export default function SpeciesFormModal({
       newErrors.uses = 'Uses is required';
     }
 
+    // Image validations - all 4 are now required
+    if (!formData.image1Url.trim()) {
+      newErrors.image1Url = 'Habitat image URL is required';
+    } else if (!isValidUrl(formData.image1Url)) {
+      newErrors.image1Url = 'Please enter a valid URL';
+    }
+
+    if (!formData.image2Url.trim()) {
+      newErrors.image2Url = 'Leaf image URL is required';
+    } else if (!isValidUrl(formData.image2Url)) {
+      newErrors.image2Url = 'Please enter a valid URL';
+    }
+
+    if (!formData.image3Url.trim()) {
+      newErrors.image3Url = 'Bark image URL is required';
+    } else if (!isValidUrl(formData.image3Url)) {
+      newErrors.image3Url = 'Please enter a valid URL';
+    }
+
+    if (!formData.image4Url.trim()) {
+      newErrors.image4Url = 'Seed/Flower image URL is required';
+    } else if (!isValidUrl(formData.image4Url)) {
+      newErrors.image4Url = 'Please enter a valid URL';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -144,10 +179,7 @@ export default function SpeciesFormModal({
       const submitData = {
         ...formData,
         botanicalName: formData.botanicalName || formData.scientificName,
-        image1Url: formData.image1Url || undefined,
-        image2Url: formData.image2Url || undefined,
-        image3Url: formData.image3Url || undefined,
-        image4Url: formData.image4Url || undefined,
+        // All 4 images are now required - no fallbacks needed
       };
 
       if (isEditing) {
@@ -301,76 +333,89 @@ export default function SpeciesFormModal({
         </FormField>
 
         {/* Images */}
-        <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-900">Reference Images (Optional)</h3>
-          <p className="text-xs text-gray-500">Enter URLs for up to 4 reference images</p>
+        <div className="bg-emerald-50 rounded-lg p-4 space-y-4 border border-emerald-100">
+          <h3 className="text-sm font-semibold text-gray-900">Reference Images (Required)</h3>
+          <p className="text-xs text-gray-600">All 4 reference images are required to ensure comprehensive species documentation</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Image 1 (Habitat)" htmlFor="species-img1">
+            <FormField label="Image 1 (Habitat)" htmlFor="species-img1" required error={errors.image1Url}>
               <input
                 id="species-img1"
                 type="url"
                 value={formData.image1Url}
                 onChange={(e) => handleChange('image1Url', e.target.value)}
                 className={inputClassName}
-                placeholder="https://..."
+                placeholder="https://... (habitat view)"
                 disabled={loading}
+                required
               />
             </FormField>
 
-            <FormField label="Image 2 (Leaf)" htmlFor="species-img2">
+            <FormField label="Image 2 (Leaf)" htmlFor="species-img2" required error={errors.image2Url}>
               <input
                 id="species-img2"
                 type="url"
                 value={formData.image2Url}
                 onChange={(e) => handleChange('image2Url', e.target.value)}
                 className={inputClassName}
-                placeholder="https://..."
+                placeholder="https://... (leaf close-up)"
                 disabled={loading}
+                required
               />
             </FormField>
 
-            <FormField label="Image 3 (Bark)" htmlFor="species-img3">
+            <FormField label="Image 3 (Bark)" htmlFor="species-img3" required error={errors.image3Url}>
               <input
                 id="species-img3"
                 type="url"
                 value={formData.image3Url}
                 onChange={(e) => handleChange('image3Url', e.target.value)}
                 className={inputClassName}
-                placeholder="https://..."
+                placeholder="https://... (bark texture)"
                 disabled={loading}
+                required
               />
             </FormField>
 
-            <FormField label="Image 4 (Seed/Flower)" htmlFor="species-img4">
+            <FormField label="Image 4 (Seed/Flower)" htmlFor="species-img4" required error={errors.image4Url}>
               <input
                 id="species-img4"
                 type="url"
                 value={formData.image4Url}
                 onChange={(e) => handleChange('image4Url', e.target.value)}
                 className={inputClassName}
-                placeholder="https://..."
+                placeholder="https://... (seed/flower)"
                 disabled={loading}
+                required
               />
             </FormField>
           </div>
 
-          {/* Image Previews */}
+          {/* Image Previews with Labels */}
           {(formData.image1Url || formData.image2Url || formData.image3Url || formData.image4Url) && (
-            <div className="flex gap-2 flex-wrap">
-              {[formData.image1Url, formData.image2Url, formData.image3Url, formData.image4Url]
-                .filter(Boolean)
-                .map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Preview ${i + 1}`}
-                    className="w-16 h-16 rounded-lg object-cover border"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                ))}
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { url: formData.image1Url, label: 'Habitat' },
+                { url: formData.image2Url, label: 'Leaf' },
+                { url: formData.image3Url, label: 'Bark' },
+                { url: formData.image4Url, label: 'Seed/Flower' }
+              ].map((img, i) => (
+                <div key={i} className="space-y-1">
+                  {img.url && (
+                    <>
+                      <img
+                        src={img.url}
+                        alt={img.label}
+                        className="w-full aspect-square rounded-lg object-cover border-2 border-emerald-200"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <p className="text-xs text-center text-gray-600 font-medium">{img.label}</p>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>

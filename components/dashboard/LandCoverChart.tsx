@@ -143,49 +143,50 @@ export default function LandCoverChart({
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`relative bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden h-full ${
+      className={`relative bg-gradient-to-br from-white via-gray-50/30 to-white rounded-[2rem] shadow-2xl border-2 border-gray-100 overflow-hidden h-full ${
         compact ? "p-5" : "p-8"
       }`}
     >
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-30 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full -mr-36 -mt-36 blur-3xl opacity-40 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-50 to-cyan-50 rounded-full -ml-32 -mb-32 blur-3xl opacity-30 pointer-events-none" />
       
       {/* Header */}
       {showTitle && (
-        <div className="flex items-center justify-between mb-3 relative z-10">
+        <div className="flex items-center justify-between mb-8 relative z-10">
           <div>
-            <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="w-1 h-1 bg-emerald-500 rounded-full" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Geospatial Intelligence</span>
+            <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">Geospatial Intelligence</span>
             </div>
-            <h3 className="text-base font-serif font-bold text-gray-900 leading-tight">
+            <h3 className="text-2xl font-serif font-bold text-gray-900 leading-tight tracking-tight">
               Land Cover Analysis
             </h3>
             {metrics?.year && (
-              <p className="text-[9px] text-gray-400 font-medium mt-0.5 uppercase tracking-widest">Snapshot: {metrics.year}</p>
+              <p className="text-[10px] text-gray-500 font-semibold mt-1.5 uppercase tracking-wider">Snapshot: <span className="text-emerald-600">{metrics.year}</span></p>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-100">
+          <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border-2 border-gray-100 shadow-sm">
             <button
               onClick={() => setCurrentVariant("doughnut")}
-              className={`p-2 rounded-lg transition-all ${
+              className={`p-2.5 rounded-lg transition-all duration-300 ${
                 currentVariant === "doughnut"
-                  ? "bg-white shadow-sm text-emerald-700"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "bg-emerald-500 shadow-lg text-white scale-105"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <PieChart className="w-3.5 h-3.5" />
+              <PieChart className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentVariant("bar")}
-              className={`p-2 rounded-lg transition-all ${
+              className={`p-2.5 rounded-lg transition-all duration-300 ${
                 currentVariant === "bar"
-                  ? "bg-white shadow-sm text-emerald-700"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "bg-emerald-500 shadow-lg text-white scale-105"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5" />
+              <BarChart3 className="w-4 h-4" />
             </button>
           </div>
         </div>

@@ -1,47 +1,81 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Leaf, ChevronLeft, ChevronRight } from "lucide-react";
+import { Leaf, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
+import { listSpecies, Species, getSpeciesImages } from '@/lib/admin/speciesApi';
 
-const speciesData = [
-  {
-    name: "Pinus roxburghii",
-    commonName: "Chir Pine",
-    description: "Native to the Himalayas, this drought-hardy pine is vital for reforestation in the foothills of Pakistan.",
-    image: "https://green.serena.com.pk/assets/Species/Pinus%20roxburghii%20Sargent/Pinus%20roxburghii%20Sargent1.jpg"
-  },
-  {
-    name: "Cedrus deodara",
-    commonName: "Deodar Cedar",
-    description: "The national tree of Pakistan. A large evergreen cedar with drooping branches, renowned for its durable wood.",
-    image: "https://green.serena.com.pk/assets/Species/Cedrus%20deodara%20(Roxb.%20Ex%20Lamb.)%20G.%20Don/Cedrus%20deodara%20(Roxb.%20Ex%20Lamb.)%20G.%20Don1.jpg"
-  },
-  {
-    name: "Prunus padus",
-    commonName: "Bird Cherry",
-    description: "A deciduous tree with beautiful white fragrant flowers, native to the northern temperate zones.",
-    image: "https://green.serena.com.pk/assets/Species/Prunus%20padus%20L/Prunus%20padus%20L1.jpg"
-  },
-  {
-    name: "Olea ferruginea",
-    commonName: "Indian Olive",
-    description: "A hardy evergreen tree found in the lower hills, adapted to arid climates and drought resistant.",
-    image: "https://green.serena.com.pk/assets/Species/Olea%20ferruginea%20Royle/Olea%20ferruginea%20Royle1.jpg"
-  },
-  {
-    name: "Morus alba",
-    commonName: "White Mulberry",
-    description: "Fast-growing deciduous tree, historically significant for sericulture and widely planted for shade.",
-    image: "https://green.serena.com.pk/assets/Species/Morus%20alba%20Linn/Morus%20alba%20Linn1.jpg"
-  }
-];
+interface SpeciesDisplay {
+  name: string;
+  commonName: string;
+  description: string;
+  image: string;
+  uses?: string;
+}
 
 export default function SpeciesShowcase() {
+  const [speciesData, setSpeciesData] = useState<SpeciesDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSpecies = async () => {
+      try {
+        setLoading(true);
+        const species = await listSpecies();
+        
+        // Transform API species to display format
+        const displaySpecies: SpeciesDisplay[] = species
+          .map((sp: Species) => {
+            const images = getSpeciesImages(sp);
+            return {
+              name: sp.scientificName,
+              commonName: sp.englishName || sp.localName || sp.scientificName,
+              description: sp.description || sp.uses || 'No description available',
+              image: images[0] || '', // Use first available image
+              uses: sp.uses
+            };
+          })
+          .filter(sp => sp.image); // Only show species with images
+        
+        setSpeciesData(displaySpecies);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch species:', err);
+        setError('Failed to load species data');
+        // Fallback to empty array - don't show section if no data
+        setSpeciesData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpecies();
+  }, []);
+
+  // Don't render if no species or loading/error
+  if (loading) {
+    return (
+      <section className="relative bg-gradient-to-b from-white via-serena-sand/30 to-white py-28 overflow-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-serena-green animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading species catalog...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error || speciesData.length === 0) {
+    return null; // Don't show section if no species available
+  }
+
   return (
     <section className="relative bg-gradient-to-b from-white via-serena-sand/30 to-white py-28 overflow-hidden">
       {/* Enhanced Background Pattern */}

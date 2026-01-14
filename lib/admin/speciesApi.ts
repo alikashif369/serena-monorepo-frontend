@@ -16,10 +16,11 @@ export interface Species {
   description: string;
   uses: string;
   imagePath?: string;
-  image1Url?: string;
-  image2Url?: string;
-  image3Url?: string;
-  image4Url?: string;
+  // All 4 reference images are now required
+  image1Url: string;  // Habitat view - REQUIRED
+  image2Url: string;  // Leaf close-up - REQUIRED
+  image3Url: string;  // Bark texture - REQUIRED
+  image4Url: string;  // Seed/flower - REQUIRED
   createdAt: string;
   updatedAt: string;
 }
@@ -32,10 +33,11 @@ export interface CreateSpeciesData {
   englishName: string;
   description: string;
   uses: string;
-  image1Url?: string;
-  image2Url?: string;
-  image3Url?: string;
-  image4Url?: string;
+  // All 4 reference images are now required
+  image1Url: string;  // Habitat view - REQUIRED
+  image2Url: string;  // Leaf close-up - REQUIRED
+  image3Url: string;  // Bark texture - REQUIRED
+  image4Url: string;  // Seed/flower - REQUIRED
 }
 
 export interface UpdateSpeciesData {
@@ -115,10 +117,11 @@ export function generateSpeciesCode(scientificName: string): string {
 }
 
 export function getSpeciesImages(species: Species): string[] {
-  const images: string[] = [];
-  if (species.image1Url) images.push(species.image1Url);
-  if (species.image2Url) images.push(species.image2Url);
-  if (species.image3Url) images.push(species.image3Url);
-  if (species.image4Url) images.push(species.image4Url);
-  return images;
+  // All 4 images are now required, so we can return them directly
+  return [
+    species.image1Url,
+    species.image2Url,
+    species.image3Url,
+    species.image4Url,
+  ];
 }

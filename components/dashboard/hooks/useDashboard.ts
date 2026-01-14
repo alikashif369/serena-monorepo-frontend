@@ -263,22 +263,41 @@ export function useDashboard(): UseDashboardReturn {
           setYearlyMetrics(metrics.find((m) => m.year === latestYear) || null);
         }
 
-        // Load photos
-        const sitePhotos = await getPhotos({ siteId: filters.siteId! });
-        console.log('Photos fetched from API:', sitePhotos);
-        console.log('Species photos:', sitePhotos.filter(p => p.category === 'SPECIES'));
-        setPhotos(sitePhotos);
-
-        // Load species (gracefully handle if endpoint doesn't exist)
+        // Load species first (gracefully handle if endpoint doesn't exist)
+        let siteSpecies: SiteSpecies[] = [];
         try {
           console.log('Fetching species for site:', filters.siteId);
-          const siteSpecies = await getSiteSpecies(filters.siteId!);
+          siteSpecies = await getSiteSpecies(filters.siteId!);
           console.log('Species data received:', siteSpecies);
           setSpecies(siteSpecies);
         } catch (speciesError) {
           console.error("Failed to load species:", speciesError);
           setSpecies([]);
         }
+
+        // Load photos for the site (EVENT and SITE categories)
+        const sitePhotos = await getPhotos({ siteId: filters.siteId! });
+        console.log('Site photos fetched from API:', sitePhotos);
+
+        // Load photos for each species assigned to this site
+        const speciesIds = siteSpecies
+          .map(ss => ss.species?.id)
+          .filter((id): id is number => id !== undefined && id !== null);
+
+        console.log('Fetching photos for species IDs:', speciesIds);
+
+        const speciesPhotosPromises = speciesIds.map(id =>
+          getPhotos({ speciesId: id, category: 'SPECIES' })
+        );
+        const speciesPhotosArrays = await Promise.all(speciesPhotosPromises);
+        const allSpeciesPhotos = speciesPhotosArrays.flat();
+
+        console.log('Species photos fetched:', allSpeciesPhotos);
+
+        // Combine site photos and species photos
+        const allPhotos = [...sitePhotos, ...allSpeciesPhotos];
+        console.log('Total photos (site + species):', allPhotos.length);
+        setPhotos(allPhotos);
 
         setError(null);
       } catch (err: any) {

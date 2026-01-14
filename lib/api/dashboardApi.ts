@@ -183,7 +183,26 @@ export async function getSiteSpecies(siteId: number): Promise<SiteSpecies[]> {
   const response = await fetch(`${API_URL}/site-species?siteId=${siteId}`, {
     headers: getHeaders(),
   });
-  return handleResponse<SiteSpecies[]>(response);
+  const data = await handleResponse<SiteSpecies[]>(response);
+
+  // Temporary debug - will remove after verification
+  console.log('🔍 API Response for site-species:', {
+    count: data.length,
+    species: data.map(s => ({
+      id: s.species?.id,
+      name: s.species?.englishName || s.species?.scientificName,
+      hasImage1: !!s.species?.image1Url,
+      hasImage2: !!s.species?.image2Url,
+      hasImage3: !!s.species?.image3Url,
+      hasImage4: !!s.species?.image4Url,
+      image1: s.species?.image1Url?.substring(0, 50),
+      image2: s.species?.image2Url?.substring(0, 50),
+      image3: s.species?.image3Url?.substring(0, 50),
+      image4: s.species?.image4Url?.substring(0, 50),
+    }))
+  });
+
+  return data;
 }
 
 // ============================================================================
