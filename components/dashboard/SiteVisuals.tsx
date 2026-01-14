@@ -17,7 +17,7 @@ import 'swiper/css/effect-fade';
 
 import type { SiteSpecies, Photo } from "./types";
 import { formatNumber } from "@/lib/api/dashboardApi";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ----------------------------------------------------------------------------
 // Types & Helpers
@@ -156,8 +156,7 @@ function PhotoGridItem({
   isLarge?: boolean;
 }) {
   return (
-    <motion.div 
-      layout
+    <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
@@ -350,7 +349,8 @@ export default function SiteVisuals({ species, photos, siteName, loading = false
              </div>
           </div>
 
-          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <AnimatePresence mode="sync">
              {displayPhotos.map((photo, idx) => (
                 <PhotoGridItem
                   key={photo.id}
@@ -363,7 +363,8 @@ export default function SiteVisuals({ species, photos, siteName, loading = false
                   })), idx)}
                 />
              ))}
-          </motion.div>
+            </AnimatePresence>
+          </div>
 
           {displayPhotos.length === 0 && (
              <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
