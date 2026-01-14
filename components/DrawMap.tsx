@@ -8,6 +8,8 @@ import OSM from "ol/source/OSM";
 import XYZ from "ol/source/XYZ";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
+import { Feature } from "ol";
+import { Geometry } from "ol/geom";
 import { Draw, Modify, Snap } from "ol/interaction";
 import GeoJSON from "ol/format/GeoJSON";
 import { Style, Stroke, Fill, Text } from "ol/style";
@@ -46,6 +48,18 @@ export const POLYGON_STYLES = {
   },
 };
 
+interface DrawMapProps {
+  onPolygonChange?: (data: any) => void;
+  existingVectors?: any[];
+  rasterFootprints?: any[];
+  showVectors?: boolean;
+  showRasters?: boolean;
+  rasterOpacity?: number;
+  onMapReady?: (map: Map, drawApi: any) => void;
+  canDraw?: boolean;
+  currentBasemap?: BasemapType;
+}
+
 export default function DrawMap({
   onPolygonChange,
   existingVectors = [],
@@ -55,8 +69,8 @@ export default function DrawMap({
   rasterOpacity = 0.35,
   onMapReady,
   canDraw = false,
-  currentBasemap = "osm" as BasemapType,
-}: any) {
+  currentBasemap = "osm",
+}: DrawMapProps) {
   console.log("[MAP] >>>>>> DrawMap RENDER <<<<<<");
 
   const mapContainer = useRef<HTMLDivElement | null>(null);
@@ -71,8 +85,8 @@ export default function DrawMap({
   const modifyInteractionRef = useRef<Modify | null>(null);
   const snapInteractionRef = useRef<Snap | null>(null);
   const baseLayerRef = useRef<TileLayer<OSM | XYZ> | null>(null);
-  const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
-  const allPolygonsLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
+  const vectorLayerRef = useRef<VectorLayer<Feature<Geometry>> | null>(null);
+  const allPolygonsLayerRef = useRef<VectorLayer<Feature<Geometry>> | null>(null);
 
   // Function to refresh background polygons (can be called externally)
   const refreshBackgroundPolygons = useRef<(() => Promise<void>) | null>(null);

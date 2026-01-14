@@ -138,7 +138,6 @@ export default function DashboardPage() {
         filters={filters}
         selectedYear={selectedYear}
         availableYears={availableYears}
-        onYearChange={setYear}
         loading={{
           metrics: loading.metrics,
           categorySummaries: loading.categorySummaries,

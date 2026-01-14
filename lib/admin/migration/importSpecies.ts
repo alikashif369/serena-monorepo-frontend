@@ -33,10 +33,10 @@ export function transformSpecies(legacy: LegacySpecies) {
     englishName: legacy.englishname?.trim() || '',
     description: legacy.description?.trim() || '',
     uses: legacy.uses?.trim() || '...',
-    image1Url: legacy.image1 || undefined,
-    image2Url: legacy.image2 || undefined,
-    image3Url: legacy.image3 || undefined,
-    image4Url: legacy.image4 || undefined,
+    image1Url: legacy.image1 || '',
+    image2Url: legacy.image2 || '',
+    image3Url: legacy.image3 || '',
+    image4Url: legacy.image4 || '',
   };
 }
 

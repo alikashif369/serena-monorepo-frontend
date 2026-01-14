@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { Doughnut, Chart } from "react-chartjs-2";
 import { motion } from "framer-motion";
 import { 
   Recycle, 
@@ -275,7 +275,7 @@ export default function WasteSewageMetrics({
                           labels: { 
                             usePointStyle: true, 
                             padding: 16,
-                            font: { size: 11, weight: '600' },
+                            font: { size: 11, weight: 600 },
                             color: '#57534e',
                           }
                         },
@@ -323,7 +323,8 @@ export default function WasteSewageMetrics({
               </h4>
               <div className="h-[240px] w-full">
                 {trendData && (
-                  <Bar
+                  <Chart
+                    type="bar"
                     data={trendData}
                     options={{
                       responsive: true,
@@ -335,15 +336,17 @@ export default function WasteSewageMetrics({
                       scales: {
                         y: {
                           beginAtZero: true,
-                          title: { 
-                            display: true, 
+                          title: {
+                            display: true,
                             text: 'Compost (Tonnes)',
                             font: { weight: 'bold', size: 11 },
                             color: 'rgb(16, 185, 129)',
                           },
-                          grid: { 
+                          grid: {
                             color: 'rgba(0,0,0,0.03)',
-                            drawBorder: false,
+                          },
+                          border: {
+                            display: false,
                           },
                           ticks: {
                             font: { size: 10 },
@@ -381,7 +384,7 @@ export default function WasteSewageMetrics({
                           labels: {
                             usePointStyle: true,
                             padding: 15,
-                            font: { size: 11, weight: '600' },
+                            font: { size: 11, weight: 600 },
                           }
                         },
                         tooltip: {
