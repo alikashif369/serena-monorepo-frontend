@@ -12,6 +12,7 @@ import {
   createSpecies,
   updateSpecies,
   generateSpeciesCode,
+  uploadSpeciesReferenceImage,
 } from '@/lib/admin/speciesApi';
 import { useToast } from '@/components/ToastContext';
 
@@ -47,7 +48,33 @@ export default function SpeciesFormModal({
   });
   const [autoCode, setAutoCode] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // File upload state
+  const [imageFiles, setImageFiles] = useState<{
+    image1: File | null;
+    image2: File | null;
+    image3: File | null;
+    image4: File | null;
+  }>({
+    image1: null,
+    image2: null,
+    image3: null,
+    image4: null,
+  });
+
+  const [imagePreviews, setImagePreviews] = useState<{
+    image1: string | null;
+    image2: string | null;
+    image3: string | null;
+    image4: string | null;
+  }>({
+    image1: null,
+    image2: null,
+    image3: null,
+    image4: null,
+  });
 
   // Initialize form data
   useEffect(() => {
@@ -82,6 +109,21 @@ export default function SpeciesFormModal({
       });
       setAutoCode(true);
     }
+
+    // Clear file state and previews
+    setImageFiles({
+      image1: null,
+      image2: null,
+      image3: null,
+      image4: null,
+    });
+    setImagePreviews({
+      image1: null,
+      image2: null,
+      image3: null,
+      image4: null,
+    });
+    setUploadProgress('');
     setErrors({});
   }, [editingSpecies, open]);
 
@@ -95,13 +137,84 @@ export default function SpeciesFormModal({
     }
   }, [formData.scientificName, autoCode]);
 
-  // URL validation helper
-  const isValidUrl = (url: string): boolean => {
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreviews.image1) URL.revokeObjectURL(imagePreviews.image1);
+      if (imagePreviews.image2) URL.revokeObjectURL(imagePreviews.image2);
+      if (imagePreviews.image3) URL.revokeObjectURL(imagePreviews.image3);
+      if (imagePreviews.image4) URL.revokeObjectURL(imagePreviews.image4);
+    };
+  }, [imagePreviews]);
+
+  // File handling functions
+  const handleFileSelect = (imageNum: 1 | 2 | 3 | 4, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    const imageKey = `image${imageNum}` as keyof typeof imageFiles;
+
+    if (!file) {
+      // Clear the file
+      setImageFiles(prev => ({ ...prev, [imageKey]: null }));
+      if (imagePreviews[imageKey]) {
+        URL.revokeObjectURL(imagePreviews[imageKey]!);
+        setImagePreviews(prev => ({ ...prev, [imageKey]: null }));
+      }
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Please select a valid image file (JPEG, PNG, or WEBP)', 'error');
+      return;
+    }
+
+    // Validate file size (10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast('Image size must be less than 10MB', 'error');
+      return;
+    }
+
+    // Update file and create preview
+    setImageFiles(prev => ({ ...prev, [imageKey]: file }));
+
+    // Revoke old preview URL if exists
+    if (imagePreviews[imageKey]) {
+      URL.revokeObjectURL(imagePreviews[imageKey]!);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviews(prev => ({ ...prev, [imageKey]: previewUrl }));
+
+    // Clear error for this field
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[`image${imageNum}Url`];
+      return newErrors;
+    });
+  };
+
+  const removeImage = (imageNum: 1 | 2 | 3 | 4) => {
+    const imageKey = `image${imageNum}` as keyof typeof imageFiles;
+
+    setImageFiles(prev => ({ ...prev, [imageKey]: null }));
+    if (imagePreviews[imageKey]) {
+      URL.revokeObjectURL(imagePreviews[imageKey]!);
+      setImagePreviews(prev => ({ ...prev, [imageKey]: null }));
+    }
+
+    // Clear the URL as well
+    setFormData(prev => ({ ...prev, [`image${imageNum}Url`]: '' }));
+  };
+
+  const uploadImageFile = async (file: File): Promise<string> => {
     try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+      const result = await uploadSpeciesReferenceImage(file);
+      return result.url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
     }
   };
 
@@ -133,29 +246,21 @@ export default function SpeciesFormModal({
       newErrors.uses = 'Uses is required';
     }
 
-    // Image validations - all 4 are now required
-    if (!formData.image1Url.trim()) {
-      newErrors.image1Url = 'Habitat image URL is required';
-    } else if (!isValidUrl(formData.image1Url)) {
-      newErrors.image1Url = 'Please enter a valid URL';
+    // Image validations - all 4 are now required (either file upload or existing URL)
+    if (!formData.image1Url.trim() && !imageFiles.image1) {
+      newErrors.image1Url = 'Habitat image is required';
     }
 
-    if (!formData.image2Url.trim()) {
-      newErrors.image2Url = 'Leaf image URL is required';
-    } else if (!isValidUrl(formData.image2Url)) {
-      newErrors.image2Url = 'Please enter a valid URL';
+    if (!formData.image2Url.trim() && !imageFiles.image2) {
+      newErrors.image2Url = 'Leaf image is required';
     }
 
-    if (!formData.image3Url.trim()) {
-      newErrors.image3Url = 'Bark image URL is required';
-    } else if (!isValidUrl(formData.image3Url)) {
-      newErrors.image3Url = 'Please enter a valid URL';
+    if (!formData.image3Url.trim() && !imageFiles.image3) {
+      newErrors.image3Url = 'Bark image is required';
     }
 
-    if (!formData.image4Url.trim()) {
-      newErrors.image4Url = 'Seed/Flower image URL is required';
-    } else if (!isValidUrl(formData.image4Url)) {
-      newErrors.image4Url = 'Please enter a valid URL';
+    if (!formData.image4Url.trim() && !imageFiles.image4) {
+      newErrors.image4Url = 'Seed/Flower image is required';
     }
 
     setErrors(newErrors);
@@ -166,7 +271,7 @@ export default function SpeciesFormModal({
   const handleSubmit = async () => {
     console.log('handleSubmit called');
     console.log('formData:', formData);
-    
+
     if (!validate()) {
       console.log('Validation failed - showing error toast');
       showToast('Please fill in all required fields', 'error');
@@ -176,18 +281,69 @@ export default function SpeciesFormModal({
     console.log('Validation passed, submitting...');
     setLoading(true);
     try {
-      const submitData = {
-        ...formData,
-        botanicalName: formData.botanicalName || formData.scientificName,
-        // All 4 images are now required - no fallbacks needed
-      };
+      // Upload any selected image files first
+      const uploadPromises: Promise<string>[] = [];
+      const imageIndexes: number[] = [];
 
-      if (isEditing) {
-        await updateSpecies(editingSpecies.id, submitData);
-        showToast('Species updated successfully', 'success');
+      if (imageFiles.image1) {
+        uploadPromises.push(uploadImageFile(imageFiles.image1));
+        imageIndexes.push(1);
+      }
+      if (imageFiles.image2) {
+        uploadPromises.push(uploadImageFile(imageFiles.image2));
+        imageIndexes.push(2);
+      }
+      if (imageFiles.image3) {
+        uploadPromises.push(uploadImageFile(imageFiles.image3));
+        imageIndexes.push(3);
+      }
+      if (imageFiles.image4) {
+        uploadPromises.push(uploadImageFile(imageFiles.image4));
+        imageIndexes.push(4);
+      }
+
+      // Show upload progress if files need to be uploaded
+      if (uploadPromises.length > 0) {
+        setUploadProgress(`Uploading ${uploadPromises.length} image(s)...`);
+        const uploadedUrls = await Promise.all(uploadPromises);
+
+        // Update formData with uploaded URLs
+        const updatedFormData = { ...formData };
+        uploadedUrls.forEach((url, index) => {
+          const imageNum = imageIndexes[index];
+          (updatedFormData as any)[`image${imageNum}Url`] = url;
+        });
+
+        setFormData(updatedFormData);
+        setUploadProgress('');
+
+        // Use updated data for submission
+        const submitData = {
+          ...updatedFormData,
+          botanicalName: updatedFormData.botanicalName || updatedFormData.scientificName,
+        };
+
+        if (isEditing) {
+          await updateSpecies(editingSpecies.id, submitData);
+          showToast('Species updated successfully', 'success');
+        } else {
+          await createSpecies(submitData);
+          showToast('Species created successfully', 'success');
+        }
       } else {
-        await createSpecies(submitData);
-        showToast('Species created successfully', 'success');
+        // No files to upload, proceed directly
+        const submitData = {
+          ...formData,
+          botanicalName: formData.botanicalName || formData.scientificName,
+        };
+
+        if (isEditing) {
+          await updateSpecies(editingSpecies.id, submitData);
+          showToast('Species updated successfully', 'success');
+        } else {
+          await createSpecies(submitData);
+          showToast('Species created successfully', 'success');
+        }
       }
       onSuccess();
       onClose();
@@ -334,90 +490,147 @@ export default function SpeciesFormModal({
 
         {/* Images */}
         <div className="bg-emerald-50 rounded-lg p-4 space-y-4 border border-emerald-100">
-          <h3 className="text-sm font-semibold text-gray-900">Reference Images (Required)</h3>
-          <p className="text-xs text-gray-600">All 4 reference images are required to ensure comprehensive species documentation</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Image 1 (Habitat)" htmlFor="species-img1" required error={errors.image1Url}>
-              <input
-                id="species-img1"
-                type="url"
-                value={formData.image1Url}
-                onChange={(e) => handleChange('image1Url', e.target.value)}
-                className={inputClassName}
-                placeholder="https://... (habitat view)"
-                disabled={loading}
-                required
-              />
-            </FormField>
-
-            <FormField label="Image 2 (Leaf)" htmlFor="species-img2" required error={errors.image2Url}>
-              <input
-                id="species-img2"
-                type="url"
-                value={formData.image2Url}
-                onChange={(e) => handleChange('image2Url', e.target.value)}
-                className={inputClassName}
-                placeholder="https://... (leaf close-up)"
-                disabled={loading}
-                required
-              />
-            </FormField>
-
-            <FormField label="Image 3 (Bark)" htmlFor="species-img3" required error={errors.image3Url}>
-              <input
-                id="species-img3"
-                type="url"
-                value={formData.image3Url}
-                onChange={(e) => handleChange('image3Url', e.target.value)}
-                className={inputClassName}
-                placeholder="https://... (bark texture)"
-                disabled={loading}
-                required
-              />
-            </FormField>
-
-            <FormField label="Image 4 (Seed/Flower)" htmlFor="species-img4" required error={errors.image4Url}>
-              <input
-                id="species-img4"
-                type="url"
-                value={formData.image4Url}
-                onChange={(e) => handleChange('image4Url', e.target.value)}
-                className={inputClassName}
-                placeholder="https://... (seed/flower)"
-                disabled={loading}
-                required
-              />
-            </FormField>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Reference Images (Required)</h3>
+            <p className="text-xs text-gray-600">Upload 4 reference images for comprehensive species documentation</p>
+            {uploadProgress && (
+              <p className="text-xs text-blue-600 font-medium mt-1">{uploadProgress}</p>
+            )}
           </div>
 
-          {/* Image Previews with Labels */}
-          {(formData.image1Url || formData.image2Url || formData.image3Url || formData.image4Url) && (
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { url: formData.image1Url, label: 'Habitat' },
-                { url: formData.image2Url, label: 'Leaf' },
-                { url: formData.image3Url, label: 'Bark' },
-                { url: formData.image4Url, label: 'Seed/Flower' }
-              ].map((img, i) => (
-                <div key={i} className="space-y-1">
-                  {img.url && (
-                    <>
-                      <img
-                        src={img.url}
-                        alt={img.label}
-                        className="w-full aspect-square rounded-lg object-cover border-2 border-emerald-200"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                      <p className="text-xs text-center text-gray-600 font-medium">{img.label}</p>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Image 1 - Habitat */}
+            <FormField label="Image 1 (Habitat)" htmlFor="species-img1" required error={errors.image1Url}>
+              <div className="space-y-2">
+                <input
+                  id="species-img1"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(1, e)}
+                  className={`${inputClassName} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100`}
+                  disabled={loading}
+                />
+                {(imagePreviews.image1 || formData.image1Url) && (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={imagePreviews.image1 || formData.image1Url}
+                      alt="Habitat preview"
+                      className="w-full h-full object-cover rounded-lg border-2 border-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(1)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      disabled={loading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormField>
+
+            {/* Image 2 - Leaf */}
+            <FormField label="Image 2 (Leaf)" htmlFor="species-img2" required error={errors.image2Url}>
+              <div className="space-y-2">
+                <input
+                  id="species-img2"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(2, e)}
+                  className={`${inputClassName} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100`}
+                  disabled={loading}
+                />
+                {(imagePreviews.image2 || formData.image2Url) && (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={imagePreviews.image2 || formData.image2Url}
+                      alt="Leaf preview"
+                      className="w-full h-full object-cover rounded-lg border-2 border-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(2)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      disabled={loading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormField>
+
+            {/* Image 3 - Bark */}
+            <FormField label="Image 3 (Bark)" htmlFor="species-img3" required error={errors.image3Url}>
+              <div className="space-y-2">
+                <input
+                  id="species-img3"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(3, e)}
+                  className={`${inputClassName} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100`}
+                  disabled={loading}
+                />
+                {(imagePreviews.image3 || formData.image3Url) && (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={imagePreviews.image3 || formData.image3Url}
+                      alt="Bark preview"
+                      className="w-full h-full object-cover rounded-lg border-2 border-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(3)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      disabled={loading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormField>
+
+            {/* Image 4 - Seed/Flower */}
+            <FormField label="Image 4 (Seed/Flower)" htmlFor="species-img4" required error={errors.image4Url}>
+              <div className="space-y-2">
+                <input
+                  id="species-img4"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileSelect(4, e)}
+                  className={`${inputClassName} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100`}
+                  disabled={loading}
+                />
+                {(imagePreviews.image4 || formData.image4Url) && (
+                  <div className="relative w-32 h-32">
+                    <img
+                      src={imagePreviews.image4 || formData.image4Url}
+                      alt="Seed/Flower preview"
+                      className="w-full h-full object-cover rounded-lg border-2 border-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(4)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      disabled={loading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormField>
+          </div>
         </div>
       </div>
     </FormModal>

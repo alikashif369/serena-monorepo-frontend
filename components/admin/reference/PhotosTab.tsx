@@ -1,3 +1,6 @@
+// NOTE: SPECIES category support commented out - species photos now managed via /admin/species
+// To re-enable, search for "COMMENTED OUT - Species photos" in this file
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -210,7 +213,8 @@ export default function PhotosTab() {
             <option value="">All Categories</option>
             <option value="EVENT">Event</option>
             <option value="SITE">Site</option>
-            <option value="SPECIES">Species</option>
+            {/* COMMENTED OUT - Species photos now managed in /admin/species */}
+            {/* <option value="SPECIES">Species</option> */}
           </select>
 
           {/* Site Filter */}
@@ -225,7 +229,8 @@ export default function PhotosTab() {
             ))}
           </select>
 
-          {/* Species Filter */}
+          {/* COMMENTED OUT - Species photos now managed in /admin/species */}
+          {/* Species Filter
           <select
             value={filters.speciesId || ''}
             onChange={(e) => setFilters(prev => ({ ...prev, speciesId: e.target.value ? parseInt(e.target.value) : undefined }))}
@@ -236,6 +241,7 @@ export default function PhotosTab() {
               <option key={species.id} value={species.id}>{species.scientificName}</option>
             ))}
           </select>
+          */}
 
           {/* Year Filter */}
           <select
@@ -536,28 +542,45 @@ function PhotoLightbox({ photo, onClose, onEdit, onDelete }: PhotoLightboxProps)
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  // Close when clicking on backdrop
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-      {/* Close button */}
+    <div
+      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
+      {/* Large prominent close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full z-10"
+        className="absolute top-6 right-6 px-5 py-3 bg-white text-gray-900 hover:bg-gray-100 rounded-lg shadow-2xl z-[60] transition-all hover:scale-105 flex items-center gap-2 font-semibold text-sm border-2 border-gray-200"
+        title="Close lightbox (ESC or click outside)"
       >
-        <X className="w-6 h-6" />
+        <X className="w-5 h-5" />
+        Close
       </button>
 
+      {/* Backdrop hint */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 text-white/60 rounded-full text-xs z-30 pointer-events-none">
+        Click outside or press ESC to close
+      </div>
+
       {/* Actions */}
-      <div className="absolute top-4 left-4 flex gap-2 z-10">
+      <div className="absolute top-6 left-6 flex gap-2 z-40">
         <button
           onClick={onEdit}
-          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm flex items-center gap-2 transition-all"
         >
           <Pencil className="w-4 h-4" />
           Edit
         </button>
         <button
           onClick={onDelete}
-          className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg text-sm flex items-center gap-2 transition-all"
         >
           <Trash2 className="w-4 h-4" />
           Delete
@@ -565,7 +588,7 @@ function PhotoLightbox({ photo, onClose, onEdit, onDelete }: PhotoLightboxProps)
       </div>
 
       {/* Image */}
-      <div className="max-w-5xl max-h-[80vh] relative">
+      <div className="max-w-5xl max-h-[80vh] relative z-10">
         <img
           src={photo.minioUrl}
           alt={photo.caption || photo.originalFileName}
@@ -574,7 +597,7 @@ function PhotoLightbox({ photo, onClose, onEdit, onDelete }: PhotoLightboxProps)
       </div>
 
       {/* Info panel */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 z-30 pointer-events-none">
         <div className="max-w-3xl mx-auto text-white">
           <div className="flex items-center gap-2 mb-2">
             <span className={`px-2 py-0.5 text-xs font-medium rounded ${getCategoryColor(photo.category)}`}>

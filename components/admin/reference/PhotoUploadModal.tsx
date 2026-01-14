@@ -1,3 +1,6 @@
+// NOTE: SPECIES category support commented out - species photos now managed via /admin/species
+// To re-enable, search for "COMMENTED OUT - Species photos" in this file
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -146,9 +149,10 @@ export default function PhotoUploadModal({
       newErrors.siteId = 'Site is required for Event/Site/Community photos';
     }
 
-    if (formData.category === 'SPECIES' && !formData.speciesId) {
-      newErrors.speciesId = 'Species is required for Species photos';
-    }
+    // COMMENTED OUT - Species photos now managed in /admin/species
+    // if (formData.category === 'SPECIES' && !formData.speciesId) {
+    //   newErrors.speciesId = 'Species is required for Species photos';
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -239,8 +243,11 @@ export default function PhotoUploadModal({
     setFormData((prev) => ({
       ...prev,
       category,
-      siteId: category === 'SPECIES' ? undefined : prev.siteId,
-      speciesId: category === 'SPECIES' ? prev.speciesId : undefined,
+      // COMMENTED OUT - Species photos now managed in /admin/species
+      // siteId: category === 'SPECIES' ? undefined : prev.siteId,
+      // speciesId: category === 'SPECIES' ? prev.speciesId : undefined,
+      siteId: prev.siteId, // Keep site ID for all categories
+      speciesId: undefined, // Species category disabled
     }));
     setErrors({});
   };
@@ -378,9 +385,10 @@ export default function PhotoUploadModal({
         </div>
 
         {/* Category Selection */}
+        {/* COMMENTED OUT - Species category removed, managed in /admin/species */}
         <FormField label="Category" htmlFor="photo-category" required>
           <div className="flex gap-2">
-            {(['EVENT', 'SITE', 'SPECIES', 'COMMUNITY'] as PhotoCategory[]).map((cat) => (
+            {(['EVENT', 'SITE', /* 'SPECIES', */ 'COMMUNITY'] as PhotoCategory[]).map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -391,7 +399,7 @@ export default function PhotoUploadModal({
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                {cat === 'EVENT' ? 'Event' : cat === 'SITE' ? 'Site' : cat === 'SPECIES' ? 'Species' : 'Community'}
+                {cat === 'EVENT' ? 'Event' : cat === 'SITE' ? 'Site' : /* cat === 'SPECIES' ? 'Species' : */ 'Community'}
               </button>
             ))}
           </div>
@@ -418,6 +426,7 @@ export default function PhotoUploadModal({
             </FormField>
           )}
 
+          {/* COMMENTED OUT - Species photos now managed in /admin/species
           {formData.category === 'SPECIES' && (
             <FormField label="Species" htmlFor="photo-species" required error={errors.speciesId}>
               <select
@@ -436,6 +445,7 @@ export default function PhotoUploadModal({
               </select>
             </FormField>
           )}
+          */}
 
           {(formData.category === 'EVENT' || formData.category === 'SITE' || formData.category === 'COMMUNITY') && (
             <FormField label="Year" htmlFor="photo-year">

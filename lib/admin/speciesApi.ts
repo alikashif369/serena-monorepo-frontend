@@ -1,6 +1,6 @@
 // API functions for Species management
 
-import { API_URL, getHeaders, handleResponse } from '../utils/apiConfig';
+import { API_URL, getHeaders, getMultipartHeaders, handleResponse } from '../utils/apiConfig';
 
 // ============================================================================
 // Types
@@ -101,6 +101,19 @@ export async function deleteSpecies(id: number): Promise<void> {
     const error = await response.json().catch(() => ({ message: 'Failed to delete species' }));
     throw new Error(error.message);
   }
+}
+
+export async function uploadSpeciesReferenceImage(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_URL}/species/upload-reference-image`, {
+    method: 'POST',
+    headers: getMultipartHeaders(),
+    body: formData,
+  });
+
+  return handleResponse<{ url: string }>(response);
 }
 
 // ============================================================================
