@@ -281,38 +281,35 @@ export default function SpeciesFormModal({
     console.log('Validation passed, submitting...');
     setLoading(true);
     try {
-      // Upload any selected image files first
-      const uploadPromises: Promise<string>[] = [];
-      const imageIndexes: number[] = [];
+      // Prepare list of files to upload
+      const filesToUpload: Array<{ file: File; imageNum: number }> = [];
 
-      if (imageFiles.image1) {
-        uploadPromises.push(uploadImageFile(imageFiles.image1));
-        imageIndexes.push(1);
-      }
-      if (imageFiles.image2) {
-        uploadPromises.push(uploadImageFile(imageFiles.image2));
-        imageIndexes.push(2);
-      }
-      if (imageFiles.image3) {
-        uploadPromises.push(uploadImageFile(imageFiles.image3));
-        imageIndexes.push(3);
-      }
-      if (imageFiles.image4) {
-        uploadPromises.push(uploadImageFile(imageFiles.image4));
-        imageIndexes.push(4);
-      }
+      if (imageFiles.image1) filesToUpload.push({ file: imageFiles.image1, imageNum: 1 });
+      if (imageFiles.image2) filesToUpload.push({ file: imageFiles.image2, imageNum: 2 });
+      if (imageFiles.image3) filesToUpload.push({ file: imageFiles.image3, imageNum: 3 });
+      if (imageFiles.image4) filesToUpload.push({ file: imageFiles.image4, imageNum: 4 });
 
-      // Show upload progress if files need to be uploaded
-      if (uploadPromises.length > 0) {
-        setUploadProgress(`Uploading ${uploadPromises.length} image(s)...`);
-        const uploadedUrls = await Promise.all(uploadPromises);
-
-        // Update formData with uploaded URLs
+      // Upload files sequentially to avoid rate limiting
+      if (filesToUpload.length > 0) {
         const updatedFormData = { ...formData };
-        uploadedUrls.forEach((url, index) => {
-          const imageNum = imageIndexes[index];
+
+        for (let i = 0; i < filesToUpload.length; i++) {
+          const { file, imageNum } = filesToUpload[i];
+
+          // Update progress message
+          setUploadProgress(`Uploading image ${i + 1} of ${filesToUpload.length}...`);
+
+          // Upload the file
+          const url = await uploadImageFile(file);
+
+          // Store the URL
           (updatedFormData as any)[`image${imageNum}Url`] = url;
-        });
+
+          // Small delay to avoid rate limiting (400ms between uploads)
+          if (i < filesToUpload.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+          }
+        }
 
         setFormData(updatedFormData);
         setUploadProgress('');
