@@ -139,24 +139,27 @@ export default function SummarySection({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-white border-t border-gray-100 shadow-[0_-1px_10px_rgba(0,0,0,0.02)] relative z-10"
+      className="bg-gradient-to-b from-white to-stone-50 border-t border-gray-100 shadow-[0_-1px_10px_rgba(0,0,0,0.02)] relative z-10"
     >
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Decorative Background Pattern */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-b from-gray-50/50 to-transparent rounded-full blur-3xl opacity-40 pointer-events-none -mr-40 -mt-40" />
+
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         {/* Section header */}
-        <div className="mb-12 text-center md:text-left pb-10 border-b border-gradient-to-r from-transparent via-gray-200 to-transparent">
+        <div className="mb-16 text-center md:text-left pb-10 border-b border-gray-100/50">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-emerald-700 text-[11px] font-extrabold uppercase tracking-[0.25em] bg-emerald-50 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg ring-2 ring-emerald-100"></div>
+                <span className="text-emerald-800 text-xs font-extrabold uppercase tracking-[0.25em] bg-white border border-emerald-100 px-4 py-1.5 rounded-full shadow-sm">
                   {hasSingleSite ? "Deep-Dive Site Analytics" : "Ecosystem Performance Overview"}
                 </span>
               </div>
-              <h2 className="text-4xl md:text-6xl font-serif text-[#115e59] font-bold tracking-tight mb-3 leading-tight">
+              <h2 className="text-4xl md:text-6xl font-serif text-[#115e59] font-bold tracking-tight mb-4 leading-tight">
                 {hasSingleSite ? selectedSite?.name : "Summary Overview"}
               </h2>
               {hasSingleSite && selectedSite && (
-                <p className="text-gray-500 text-base max-w-2xl font-normal leading-relaxed">
+                <p className="text-gray-500 text-lg max-w-2xl font-normal leading-relaxed">
                   {getCategoryDescription(selectedSite)}
                 </p>
               )}
@@ -166,12 +169,12 @@ export default function SummarySection({
 
         {hasSingleSite && selectedSite ? (
           // Single site view - Dynamic based on category type
-          <div className="space-y-16">
+          <div className="space-y-24">
             {/* Plantation: Show Land Cover Chart + Site Details Panel - Updated Layout for balance */}
             {isPlantation && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                 {/* Left Side: Land Cover Chart (1 col) */}
-                <div className="w-full">
+                <div className="w-full h-full">
                   <LandCoverChart
                     metrics={yearlyMetrics}
                     loading={loading.metrics}
@@ -181,7 +184,7 @@ export default function SummarySection({
 
                 {/* Right Side: Site Details (1 col) */ }
                 {/* Fixed height to match chart somewhat or allow natural growth */}
-                <div className="w-full">
+                <div className="w-full h-full">
                   <SiteDetailsPanel
                     site={selectedSite}
                     metrics={yearlyMetrics}
@@ -225,26 +228,29 @@ export default function SummarySection({
 
             {/* Middle Row: Visual Documentation & Biodiversity - Only for Plantation/Restoration */}
             {isPlantation && (
-              <div className="pt-20 mt-16 border-t-2 border-gray-100">
-                <SiteVisuals
-                  species={siteSpecies}
-                  photos={sitePhotos}
-                  siteName={selectedSite.name}
-                  loading={loading.photos || loading.species}
-                />
+              <div className="pt-8">
+                 <SiteVisuals
+                   species={siteSpecies}
+                   photos={sitePhotos}
+                   siteName={selectedSite.name}
+                   loading={loading.photos || loading.species}
+                 />
               </div>
             )}
 
-            {/* Bottom Row: Site Specific Metrics */}
-            <div className="pt-20 mt-16 border-t-2 border-gray-100">
+            {/* Bottom Row: Site Specific Metrics - Only show if separate from top panels for non-plantation, or appended */}
+            {/* For Plantation, metrics are inside SiteDetailsPanel now largely, but SiteMetrics component exists. Keep it if it adds value or remove redundancy. */}
+            {/* The new SiteDetailsPanel includes QuickStats. SiteMetrics provides more granular list. Let's keep it but formatted nicely. */}
+            
+            <div className="pt-16 border-t border-gray-100/50">
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-1 h-1 bg-amber-500 rounded-full"></div>
-                  <span className="text-amber-700 text-[11px] font-extrabold uppercase tracking-[0.25em]">
-                    Performance Indicators
+                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                  <span className="text-amber-700 text-[10px] font-extrabold uppercase tracking-[0.25em]">
+                    Additional Metrics
                   </span>
                 </div>
-                <h3 className="text-3xl font-serif font-bold text-gray-900">Key Metrics Overview</h3>
+                <h3 className="text-3xl font-serif font-bold text-gray-900">Key Performance Indicators</h3>
               </div>
               <SiteMetrics
                 site={selectedSite}
