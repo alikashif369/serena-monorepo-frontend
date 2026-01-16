@@ -248,9 +248,17 @@ export default function DashboardMap({
     const source = vectorLayerRef.current.getSource();
     if (!source) return;
 
+    // Always update the layer style before modifying features
+    vectorLayerRef.current.setStyle((feature) =>
+      getVectorStyle(feature as Feature<Geometry>, false)
+    );
+
     source.clear();
 
-    if (boundaries.length === 0) return;
+    if (boundaries.length === 0) {
+      vectorLayerRef.current.changed();
+      return;
+    }
 
     try {
       const features: Feature<Geometry>[] = [];
@@ -310,7 +318,7 @@ export default function DashboardMap({
     } catch (error) {
       console.error("[DashboardMap] Error adding boundaries:", error);
     }
-  }, [boundaries]);
+  }, [boundaries, getVectorStyle]);
 
   useEffect(() => {
     if (vectorLayerRef.current) {
