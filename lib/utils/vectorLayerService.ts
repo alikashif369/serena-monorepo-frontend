@@ -158,10 +158,27 @@ export async function fetchAllVectorLayers(retryCount = 0): Promise<VectorLayerR
         success: true,
         data,
       };
-    } else if (data && typeof data === 'object' && data.success && Array.isArray(data.data)) {
-      // Fallback for wrapped response format
-      console.log('[VECTOR_SERVICE] Successfully fetched', data.data.length, 'vector layers (wrapped)');
-      return data;
+    } else if (data && typeof data === 'object' && Array.isArray(data.data)) {
+      // Handle wrapped response format (both success: true and success: false cases)
+      const isSuccess = data.success !== false && data.data.length > 0;
+      console.log('[VECTOR_SERVICE] Received wrapped response:', {
+        success: data.success,
+        dataLength: data.data.length,
+        message: data.message || data.error
+      });
+      return {
+        success: isSuccess,
+        data: data.data,
+        error: data.message || data.error,
+      };
+    } else if (data && typeof data === 'object' && Object.keys(data).length === 0) {
+      // Handle empty object {} response (backend may be initializing)
+      console.warn('[VECTOR_SERVICE] Received empty object response - backend may be starting up');
+      return {
+        success: false,
+        data: [],
+        error: 'Backend service returned empty response - please try again',
+      };
     } else {
       console.error('[VECTOR_SERVICE] Unexpected response format:', data);
       return {

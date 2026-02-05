@@ -18,19 +18,29 @@ import { API_URL, getHeaders, handleResponse } from '../utils/apiConfig';
 // ============================================================================
 
 export async function getHierarchyTree(): Promise<HierarchyTree> {
-  const response = await fetch(`${API_URL}/hierarchy/tree`, {
-    headers: getHeaders(),
-    next: { revalidate: 300 }, // Cache for 5 minutes
-  });
-  const data = await handleResponse<HierarchyTree | any[]>(response);
+  try {
+    const response = await fetch(`${API_URL}/hierarchy/tree`, {
+      headers: getHeaders(),
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+    const data = await handleResponse<HierarchyTree | any[]>(response);
 
-  // Handle both formats: { organizations: [...] } or [...] (array directly)
-  if (Array.isArray(data)) {
-    console.log("[dashboardApi] Converting array response to HierarchyTree format");
-    return { organizations: data };
+    // Handle both formats: { organizations: [...] } or [...] (array directly)
+    if (Array.isArray(data)) {
+      console.log("[dashboardApi] Converting array response to HierarchyTree format");
+      return { organizations: data };
+    }
+
+    return data as HierarchyTree;
+  } catch (error) {
+    console.error("[dashboardApi] Failed to fetch hierarchy tree:", error);
+    // Return empty structure instead of throwing to prevent UI crashes
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn("[dashboardApi] Network error - API server may be down");
+    }
+    // Return empty hierarchy tree so UI can still render
+    return { organizations: [] };
   }
-
-  return data as HierarchyTree;
 }
 
 export async function getHierarchyStats(): Promise<Record<string, number>> {
