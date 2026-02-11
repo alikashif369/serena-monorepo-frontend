@@ -61,7 +61,10 @@ export async function listSpecies(search?: string): Promise<Species[]> {
   const params = new URLSearchParams();
   if (search) params.append('search', search);
 
-  const response = await fetch(`${API_URL}/species?${params.toString()}`, {
+  const queryString = params.toString();
+  const url = queryString ? `${API_URL}/species?${queryString}` : `${API_URL}/species`;
+
+  const response = await fetch(url, {
     headers: getHeaders(),
   });
   return handleResponse<Species[]>(response);
