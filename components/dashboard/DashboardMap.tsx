@@ -487,6 +487,16 @@ export default function DashboardMap({
         </div>
       </div>
 
+      {/* Imagery Attribution - bottom left */}
+      {/* Imagery Attribution - bottom left */}
+      <div className="absolute bottom-6 left-6 z-[9999] pointer-events-none data-[state=visible]">
+        <div className="bg-white/95 backdrop-blur-md rounded-lg shadow-md border border-stone-300 px-3 py-2">
+          <p className="text-[10px] font-semibold text-stone-700 leading-none">
+            Imagery (Raw & Classified): Google (1m resolution)
+          </p>
+        </div>
+      </div>
+
       {/* Custom zoom styles - light theme */}
       <style jsx global>{`
         .ol-scale-line {
